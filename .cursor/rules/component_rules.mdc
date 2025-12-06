@@ -1,0 +1,292 @@
+# 컴포넌트 개발 규칙
+
+> **목적**: Virtual Try-On 서비스의 모든 컴포넌트 개발 시 준수할 규칙  
+> **작성일**: 2025.12.06
+
+---
+
+## 📦 컴포넌트 구조 규칙
+
+### 1. 파일 위치
+```
+components/
+├── ui/              # 기본 UI 컴포넌트 (Button, Input, Card 등)
+├── layout/          # 레이아웃 컴포넌트 (Header, Footer, Sidebar)
+├── features/        # 기능별 컴포넌트
+│   ├── auth/       # 인증 관련
+│   ├── try-on/     # Try-On 관련
+│   └── avatar/     # 아바타 관련
+└── shared/          # 공유 컴포넌트
+```
+
+### 2. 파일 명명 규칙
+- **컴포넌트 파일**: PascalCase (예: `Button.tsx`, `LoginForm.tsx`)
+- **유틸 파일**: camelCase (예: `formatDate.ts`, `apiClient.ts`)
+- **타입 파일**: kebab-case (예: `user.types.ts`, `try-on.types.ts`)
+
+### 3. 컴포넌트 작성 규칙
+
+#### TypeScript 인터페이스 필수
+```typescript
+interface ComponentProps {
+  // 필수 props는 required
+  title: string;
+  // 선택 props는 optional
+  subtitle?: string;
+  // 이벤트 핸들러는 함수 타입 명시
+  onClick?: () => void;
+  // children은 React.ReactNode
+  children?: React.ReactNode;
+}
+```
+
+#### Props 기본값 설정
+```typescript
+export const Component = ({
+  variant = 'primary',  // 기본값 명시
+  size = 'md',
+  disabled = false,
+  ...props
+}: ComponentProps) => {
+  // ...
+};
+```
+
+#### className 병합 규칙
+```typescript
+// baseStyles + variantStyles + sizeStyles + custom className
+const baseStyles = 'rounded-lg font-semibold';
+const variantStyles = {
+  primary: 'bg-primary-500 text-white',
+  secondary: 'bg-secondary-500 text-white',
+};
+const className = `${baseStyles} ${variantStyles[variant]} ${props.className || ''}`;
+```
+
+---
+
+## 🎨 스타일링 규칙
+
+### 1. TailwindCSS 사용 규칙
+- **유틸리티 클래스 우선**: 인라인 스타일 사용 금지
+- **반응형**: 모바일 우선 접근 (예: `md:`, `lg:`)
+- **커스텀 색상**: `primary-500`, `secondary-500` 등 디자인 토큰 사용
+
+### 2. 색상 사용 규칙
+```typescript
+// ✅ 올바른 사용
+className="bg-primary-500 text-white hover:bg-primary-600"
+
+// ❌ 잘못된 사용
+className="bg-[#6366F1]"  // 하드코딩 금지
+```
+
+### 3. 간격 규칙
+- **4px 그리드 시스템** 준수
+- TailwindCSS spacing scale 사용 (space-1, space-2, ...)
+- Padding/Margin은 4px 배수만 사용
+
+### 4. 타이포그래피 규칙
+```typescript
+// 텍스트 스타일은 TailwindCSS 클래스 사용
+className="text-xl font-semibold text-gray-900"  // H1
+className="text-base font-medium text-gray-700"  // Body
+className="text-sm text-gray-500"                 // Caption
+```
+
+---
+
+## 🔧 컴포넌트 패턴 규칙
+
+### 1. 기본 UI 컴포넌트 (components/ui/)
+- **재사용 가능**해야 함
+- **Variants 지원** (Primary, Secondary, Outline 등)
+- **Size 옵션** 제공 (Small, Medium, Large)
+- **접근성** 고려 (aria-label, focus 상태 등)
+
+### 2. 예시: Button 컴포넌트
+```typescript
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  className?: string;
+}
+
+export const Button = ({
+  variant = 'primary',
+  size = 'md',
+  children,
+  onClick,
+  disabled = false,
+  type = 'button',
+  className = '',
+}: ButtonProps) => {
+  // baseStyles + variantStyles + sizeStyles 패턴
+  const baseStyles = 'rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2';
+  // ...
+};
+```
+
+### 3. Input 컴포넌트 규칙
+- **Label 필수** (접근성)
+- **Error 상태** 처리
+- **Placeholder** 명확한 안내
+- **Required 표시** (asterisk)
+
+### 4. Card 컴포넌트 규칙
+- **Title/Subtitle** 옵션 제공
+- **Interactive** 옵션 (onClick)
+- **Shadow** 상태 관리 (default, hover)
+
+---
+
+## 📄 페이지 컴포넌트 규칙
+
+### 1. App Router 구조
+```
+app/
+├── (auth)/          # 인증 관련 페이지 그룹
+│   ├── login/
+│   └── register/
+├── (main)/          # 메인 서비스 페이지 그룹
+│   ├── dashboard/
+│   ├── try-on/
+│   └── avatar/
+└── layout.tsx       # 루트 레이아웃
+```
+
+### 2. 페이지 컴포넌트 규칙
+- **'use client'** 지시어 사용 (클라이언트 컴포넌트일 때)
+- **상태 관리**: useState, Zustand, React Query
+- **에러 처리**: try-catch, error boundary
+- **로딩 상태**: Suspense, loading.tsx
+
+### 3. 레이아웃 규칙
+- **중앙 정렬**: `flex items-center justify-center`
+- **최소 높이**: `min-h-screen` (전체 화면)
+- **반응형**: `max-w-md, max-w-lg` (컨테이너 너비 제한)
+
+---
+
+## 🎯 접근성 규칙
+
+### 1. 필수 요소
+- **시맨틱 HTML**: `<button>`, `<input>`, `<form>` 등
+- **ARIA 속성**: `aria-label`, `aria-describedby` (필요시)
+- **키보드 네비게이션**: Tab, Enter, Escape 지원
+- **포커스 표시**: `focus:ring-2` 등 명확한 포커스 스타일
+
+### 2. 색상 대비
+- **텍스트 대비**: 최소 4.5:1 (WCAG AA)
+- **상태 표시**: 색상만이 아닌 아이콘/텍스트 병행
+
+### 3. 폼 접근성
+- **Label 연결**: `<label htmlFor="input-id">`
+- **에러 메시지**: `aria-describedby` 연결
+- **Required 표시**: 시각적 + 텍스트
+
+---
+
+## 📝 문서화 규칙
+
+### 1. 컴포넌트 주석
+```typescript
+/**
+ * Button 컴포넌트
+ * 
+ * @param variant - 버튼 스타일 (primary, secondary, outline)
+ * @param size - 버튼 크기 (sm, md, lg)
+ * @param children - 버튼 내부 텍스트/컨텐츠
+ * @param onClick - 클릭 이벤트 핸들러
+ * @param disabled - 비활성화 상태
+ */
+export const Button = ({ ... }: ButtonProps) => {
+  // ...
+};
+```
+
+### 2. Props 문서화
+- 모든 props에 타입 정의
+- 선택적 props는 `?` 표시
+- 기본값 명시
+
+### 3. 사용 예시
+```typescript
+// 컴포넌트 파일 하단에 사용 예시 주석 추가
+/**
+ * 사용 예시:
+ * 
+ * <Button variant="primary" size="lg" onClick={handleClick}>
+ *   로그인
+ * </Button>
+ */
+```
+
+---
+
+## 🔄 상태 관리 규칙
+
+### 1. 로컬 상태
+- **useState**: 컴포넌트 내부 상태
+- **useReducer**: 복잡한 상태 로직
+
+### 2. 전역 상태
+- **Zustand**: 클라이언트 상태 (인증, UI 상태)
+- **React Query**: 서버 상태 (API 데이터)
+
+### 3. 상태 네이밍
+```typescript
+// ✅ 좋은 예
+const [email, setEmail] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+const [errors, setErrors] = useState<{ email?: string }>({});
+
+// ❌ 나쁜 예
+const [e, setE] = useState('');  // 축약 금지
+const [loading, setLoading] = useState(false);  // boolean은 is/has 접두사
+```
+
+---
+
+## 🧪 테스트 규칙 (향후)
+
+### 1. 단위 테스트
+- 컴포넌트 렌더링 테스트
+- Props 변경 테스트
+- 이벤트 핸들러 테스트
+
+### 2. 통합 테스트
+- 페이지 플로우 테스트
+- API 연동 테스트
+
+---
+
+## 📋 체크리스트
+
+새 컴포넌트 생성 시 확인:
+
+- [ ] TypeScript 인터페이스 정의
+- [ ] Props 기본값 설정
+- [ ] TailwindCSS 클래스 사용 (하드코딩 금지)
+- [ ] 접근성 고려 (시맨틱 HTML, ARIA)
+- [ ] 반응형 디자인 (모바일 우선)
+- [ ] 에러 처리
+- [ ] 로딩 상태 처리
+- [ ] 문서화 (주석, 사용 예시)
+- [ ] 디자인 시스템 규칙 준수
+
+---
+
+## 🔗 참고 문서
+
+- **디자인 시스템**: `.cursor/rules/design_system_rules.mdc`
+- **컴포넌트 스펙**: `design/COMPONENT_SPECS.md`
+- **아키텍처**: `technical/ARCHITECTURE.md`
+
+---
+
+**중요**: 이 규칙은 프로젝트 전체에 적용되며, 모든 컴포넌트와 페이지는 이 규칙을 준수해야 합니다.
