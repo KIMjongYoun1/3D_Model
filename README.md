@@ -1,9 +1,9 @@
-# 🎨 Virtual Try-On 서비스 기획안 (초안)
+# 🎨 Virtual Try-On 서비스
 
-> **버전**: v0.1 (초안)  
-> **작성일**: 2025.11.30  
+> **버전**: v1.0  
+> **최종 수정**: 2025.12.26  
 > **개발 규모**: 1인 ~ 3인  
-> **예상 월 유지비**: 약 30만원
+> **설계 방향**: 서비스 기능 중심 + 결제 연동
 
 ---
 
@@ -15,10 +15,33 @@
 ### 핵심 가치
 > "옷을 사기 전에 내 모습으로 미리 입어본다"
 
-### 주요 기능
-1. **의상 촬영 → 3D 모델링**: 옷 사진을 찍으면 AI가 분석하여 착용 이미지 생성
-2. **개인화 마네킹**: 사용자 얼굴이 반영된 3D 아바타에 옷 적용
-3. **결과물 저장/공유**: 착용 시뮬레이션 결과를 저장하고 SNS 공유
+### 주요 서비스 기능
+
+#### 1. 사용자 관리 서비스
+- 회원가입/로그인 (JWT 인증)
+- 프로필 관리
+- 비밀번호 암호화 (BCrypt)
+
+#### 2. 구독 관리 서비스
+- 구독 플랜 관리 (Free, Basic, Pro, Unlimited)
+- 사용량 추적 및 제한
+- 구독 상태 관리
+
+#### 3. 결제 서비스 ⭐
+- 결제 요청 및 검증
+- PG사 연동 (토스페이먼츠, 아임포트)
+- 결제 이력 관리
+- 구독 자동 갱신
+
+#### 4. Try-On 서비스
+- 의상 업로드 및 관리
+- AI 기반 Virtual Try-On (IDM-VTON)
+- 결과 이미지 저장 및 관리
+
+#### 5. 아바타 서비스
+- 개인화 아바타 생성 (MediaPipe Face Mesh)
+- 체형 파라미터 설정
+- 3D 렌더링 (Three.js)
 
 ### 타겟 사용자
 - 온라인 쇼핑 시 사이즈/핏 고민하는 소비자
@@ -36,10 +59,12 @@
 - [개발 로드맵](./docs/planning/ROADMAP.md)
 
 ### 🏗️ 기술 문서
-- [시스템 아키텍처](./docs/technical/ARCHITECTURE.md)
+- [서비스 아키텍처](./docs/SERVICE_ARCHITECTURE.md) ⭐ - 서비스 기능 중심 구조
+- [시스템 아키텍처](./docs/technical/ARCHITECTURE.md) - 기술 스택 상세
 - [AI 모델 선정](./docs/technical/AI_MODELS.md)
 - [AI 모듈 연동](./docs/technical/AI_INTEGRATION.md)
 - [보안 가이드](./docs/technical/SECURITY.md)
+- [암호화 기준](./docs/SECURITY_ENCRYPTION.md) - 비밀번호, JWT 암호화 기준
 
 ### 🛠️ 개발 가이드
 - [MCP 가이드](./docs/guides/MCP_GUIDE.md) - Figma & Notion MCP 설정 및 사용법
@@ -59,30 +84,73 @@
 ### 📚 문서 관리
 - [빠른 시작](./docs/QUICK_START.md)
 - [개발 환경 설정](./docs/DEVELOPMENT_SETUP.md)
+- [로컬 개발 환경 설정](./docs/DEVELOPMENT_SETUP_LOCAL.md) - Docker 제외
 - [프로젝트 구조](./docs/STRUCTURE.md)
-- [Git Ignore 가이드](./docs/GIT_IGNORE_GUIDE.md)
+- [데이터베이스 마이그레이션](./docs/DATABASE_MIGRATION.md) - 마이그레이션 개념
+- [백엔드 DB 접근 방법](./docs/BACKEND_DB_ACCESS.md) - ORM 사용 가이드
+- [개발 가이드](./docs/DEVELOPMENT_GUIDE.md) - 핵심 기능 직접 구현 가이드
+- [클래스 참조 가이드](./docs/CLASS_REFERENCE_GUIDE.md) - 기능 개발 시 클래스 확인 순서
+- [프로젝트 개선 방안](./docs/PROJECT_IMPROVEMENT.md) - 프로젝트 품질 향상 방안
 
 ---
 
-## 🔄 서비스 플로우 (Big Picture)
+## 🔄 전체 서비스 흐름
+
+### 사용자 여정
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           사용자 플로우                                   │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  [1] 얼굴 등록       [2] 옷 사진 촬영      [3] AI 합성        [4] 결과물  │
-│  ┌─────────┐        ┌─────────┐         ┌─────────┐       ┌─────────┐   │
-│  │ 📸 얼굴 │  ──▶   │ 👗 옷   │   ──▶   │ 🤖 AI   │ ──▶   │ 🖼️ 착용 │   │
-│  │  사진   │        │  사진   │         │  처리   │       │  이미지 │   │
-│  └─────────┘        └─────────┘         └─────────┘       └─────────┘   │
-│       │                  │                  │                  │        │
-│       ▼                  ▼                  ▼                  ▼        │
-│  Face Mesh 생성   의상 세그멘테이션   Virtual Try-On     3D 렌더링      │
-│  + 3D 아바타 생성  + 텍스처 추출      모델 적용         + 공유/저장     │
-│                                                                          │
-└──────────────────────────────────────────────────────────────────────────┘
+[1] 회원가입/로그인
+    └─▶ 사용자 관리 서비스 (Java)
+        └─▶ 비밀번호 BCrypt 해싱 저장
+
+[2] 구독 플랜 선택
+    └─▶ 구독 관리 서비스 (Java)
+        └─▶ 사용량 제한 확인
+
+[3] 결제 진행 ⭐
+    └─▶ 결제 서비스 (Java)
+        └─▶ PG사 연동 (토스페이먼츠/아임포트)
+            └─▶ 결제 검증 및 구독 활성화
+
+[4] 아바타 생성 (선택)
+    └─▶ 아바타 서비스 (Java + Python)
+        └─▶ MediaPipe Face Mesh 처리
+            └─▶ 3D 아바타 생성
+
+[5] 의상 업로드
+    └─▶ 의상 관리 서비스 (Java)
+        └─▶ 이미지 저장 (Cloudflare R2)
+
+[6] Try-On 실행
+    └─▶ Try-On 서비스 (Java + Python)
+        ├─▶ 사용량 체크 (Usage Service)
+        ├─▶ AI 처리 요청 (Python)
+        │   └─▶ IDM-VTON 모델 실행
+        └─▶ 결과 저장 및 반환
+
+[7] 결과 확인 및 공유
+    └─▶ 결과 이미지 다운로드/공유
 ```
+
+### 서비스 아키텍처
+
+```
+Frontend (Next.js)
+    │
+    ├─▶ Java Backend (비즈니스 로직)
+    │   ├─▶ User Service (인증/인가)
+    │   ├─▶ Subscription Service (구독 관리)
+    │   ├─▶ Payment Service (결제) ⭐
+    │   ├─▶ Usage Service (사용량 추적)
+    │   └─▶ Garment Service (의상 관리)
+    │
+    └─▶ Python Backend (AI 처리)
+        ├─▶ Try-On Service (AI 모델 실행)
+        ├─▶ Image Processing Service
+        └─▶ AI Model Service
+```
+
+> **자세한 내용**: [서비스 아키텍처 문서](./docs/SERVICE_ARCHITECTURE.md)
 
 ---
 
@@ -115,18 +183,46 @@
 
 ### 프로젝트 개발
 1. [도구](./docs/tools/TOOLS.md)를 참고하여 필요한 도구 설치
-2. [시스템 아키텍처](./docs/technical/ARCHITECTURE.md)에서 기술 스택 확인
-3. [개발 로드맵](./docs/planning/ROADMAP.md)의 Phase 1부터 진행
-4. [ERD](./docs/design/ERD.md)를 참고하여 DB 설계
+2. [서비스 아키텍처](./docs/SERVICE_ARCHITECTURE.md)에서 서비스 구조 확인
+3. [시스템 아키텍처](./docs/technical/ARCHITECTURE.md)에서 기술 스택 확인
+4. [개발 로드맵](./docs/planning/ROADMAP.md)의 Phase 1부터 진행
+5. [ERD](./docs/design/ERD.md)를 참고하여 DB 설계
+6. [데이터베이스 마이그레이션](./docs/DATABASE_MIGRATION.md) 이해
 
 ---
 
-## 📌 주요 결정 사항 (TBD)
+## 🛠️ 기술 스택
 
+### Backend
+- **Java (Spring Boot)**: 비즈니스 로직, 사용자 관리, 구독, **결제** ⭐
+- **Python (FastAPI)**: AI 모델 연동, 이미지 처리
+- **PostgreSQL**: 메인 데이터베이스
+- **Redis**: 캐시 및 작업 큐
+
+### Frontend
+- **Next.js 14**: React 프레임워크
+- **TypeScript**: 타입 안정성
+- **Three.js**: 3D 렌더링
+
+### 보안
+- **비밀번호 암호화**: BCrypt
+- **JWT 토큰**: HS256 알고리즘
+- **결제 연동**: 토스페이먼츠, 아임포트
+
+---
+
+## 📌 주요 결정 사항
+
+### ✅ 확정
+- [x] 서비스 기능 중심 아키텍처
+- [x] 결제 연동 구조 (토스페이먼츠, 아임포트)
+- [x] 자동 마이그레이션 (Flyway, Alembic)
+- [x] 암호화 기준 (BCrypt, JWT HS256)
+
+### 🔄 진행 중
 - [ ] 서비스명 최종 결정
 - [ ] AI 모델 최종 선정 (IDM-VTON vs OOTDiffusion)
 - [ ] 클라우드 인프라 선정 (AWS vs GCP vs 국내)
-- [ ] 수익 모델 결정 (B2C 구독 vs B2B API)
 
 ---
 

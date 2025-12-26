@@ -1,0 +1,67 @@
+# ============================================
+# Spring Boot 애플리케이션 설정
+# ============================================
+spring:
+  # 애플리케이션 이름
+  application:
+    name: virtual-tryon-backend
+  
+  # 데이터베이스 연결 설정 (PostgreSQL)
+  # - url: JDBC 연결 URL (환경 변수 DATABASE_URL 우선, 없으면 기본값 사용)
+  # - username: DB 사용자명 (환경 변수 DB_USER 우선)
+  # - password: DB 비밀번호 (환경 변수 DB_PASSWORD 우선)
+  # - driver-class-name: PostgreSQL JDBC 드라이버
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/virtual_tryon}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA/Hibernate 설정
+  # - ddl-auto: validate (스키마 자동 생성 비활성화, Flyway 사용)
+  # - show-sql: true (SQL 쿼리 로그 출력)
+  # - dialect: PostgreSQL 방언 사용
+  # - format_sql: true (SQL 포맷팅)
+  jpa:
+    hibernate:
+      ddl-auto: validate  # validate: 스키마 검증만 수행 (Flyway가 마이그레이션 관리)
+    show-sql: true  # 개발 시 SQL 쿼리 확인용
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true  # SQL 포맷팅 (가독성 향상)
+  
+  # Flyway 데이터베이스 마이그레이션 설정
+  # - enabled: true (Flyway 활성화)
+  # - locations: 마이그레이션 스크립트 위치 (src/main/resources/db/migration)
+  # - baseline-on-migrate: 기존 DB에 baseline 적용
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+# ============================================
+# 서버 설정
+# ============================================
+server:
+  port: 8080  # 서버 포트
+  error:
+    include-message: always  # 에러 메시지 항상 포함
+    include-stacktrace: on_param  # stacktrace는 파라미터 있을 때만 포함
+
+# ============================================
+# 결제 시뮬레이션 설정
+# ============================================
+payment:
+  success-rate: ${PAYMENT_SUCCESS_RATE:0.9}  # 결제 성공 확률 (0.0 ~ 1.0, 기본값 0.9 = 90%)
+
+# ============================================
+# 로깅 설정
+# ============================================
+logging:
+  level:
+    root: INFO  # 루트 로거 레벨
+    com.virtualtryon: DEBUG  # 프로젝트 패키지 DEBUG 레벨
+    org.springframework.web: DEBUG  # Spring Web DEBUG (요청/응답 로그)
+    org.hibernate.SQL: DEBUG  # Hibernate SQL DEBUG (쿼리 로그)
+
