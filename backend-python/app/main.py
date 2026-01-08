@@ -110,6 +110,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 보안 미들웨어 추가
+# - 위변조/탈취 방지
+from app.core.middleware import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    LoginRateLimitMiddleware
+)
+
+# 보안 헤더 미들웨어 (XSS, 클릭재킹 방지)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Rate Limiting 미들웨어 (DDoS 방지)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
+
+# AI API Rate Limiting 미들웨어 (무차별 호출 방지)
+# ⚠️ 주의: 로그인 Rate Limiting은 Java Backend에 있음
+app.add_middleware(LoginRateLimitMiddleware, max_attempts=10, lockout_minutes=15)
+
 @app.get("/")
 async def root():
     """
@@ -126,6 +144,13 @@ async def health():
     - 로드밸런서나 헬스체크 도구에서 사용
     """
     return {"status": "healthy"}
+
+# API 라우터 등록
+from app.api.v1 import tryon_router, garments_router, avatars_router
+
+app.include_router(tryon_router, prefix="/api/v1")
+app.include_router(garments_router, prefix="/api/v1")
+app.include_router(avatars_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

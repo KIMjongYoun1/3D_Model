@@ -50,6 +50,15 @@ server:
     include-stacktrace: on_param  # stacktrace는 파라미터 있을 때만 포함
 
 # ============================================
+# JWT 설정
+# ============================================
+# ⚠️ 중요: Python Backend와 같은 JWT_SECRET 사용해야 함
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-key-change-this-in-production}  # Python과 동일한 값 사용
+  algorithm: HS256  # JWT 알고리즘
+  expire-minutes: ${JWT_EXPIRE_MINUTES:60}  # 토큰 만료 시간 (분)
+
+# ============================================
 # 결제 시뮬레이션 설정
 # ============================================
 payment:

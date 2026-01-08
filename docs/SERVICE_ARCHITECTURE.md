@@ -395,3 +395,5 @@ ADD COLUMN cancelled_at TIMESTAMP;
 
 *이 문서는 서비스 기능 중심 아키텍처를 정의합니다.*
 
+
+

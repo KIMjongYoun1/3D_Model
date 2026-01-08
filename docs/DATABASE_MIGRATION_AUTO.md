@@ -342,3 +342,5 @@ async def startup_event():
 
 *Flyway는 자동으로, Alembic은 수동으로 실행됩니다!*
 
+
+
