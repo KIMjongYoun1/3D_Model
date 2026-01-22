@@ -196,3 +196,4 @@ pg_response JSONB  -- PG사 응답 데이터 (카드번호 마스킹 처리됨)
 
 
 
+

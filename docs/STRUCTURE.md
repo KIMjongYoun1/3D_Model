@@ -1,6 +1,6 @@
 # 📁 프로젝트 디렉토리 구조
 
-> 문서 정리 완료일: 2025.12.06
+> 문서 정리 완료일: 2026.01.22
 
 ---
 
@@ -12,13 +12,15 @@
 ├── 📁 docs/                  # 모든 문서 (개발 파일과 분리)
 │   ├── 📋 planning/          # 기획 문서
 │   │   ├── README.md        # 프로젝트 개요
-│   │   └── ROADMAP.md       # 개발 로드맵
+│   │   ├── ROADMAP.md       # 개발 로드맵
+│   │   └── VISUALIZATION_EXPANSION.md # 시각화 확장 계획 ⭐
 │   │
 │   ├── 🏗️ technical/        # 기술 문서
-│   │   ├── ARCHITECTURE.md  # 시스템 아키텍처
+│   │   ├── ARCHITECTURE.md  # 시스템 아키텍처 (통합 3D 엔진)
 │   │   ├── AI_MODELS.md     # AI 모델 선정
 │   │   ├── AI_INTEGRATION.md # AI 모듈 연동
-│   │   └── SECURITY.md      # 보안 가이드
+│   │   ├── SECURITY.md      # 보안 가이드
+│   │   └── JWT_CLAIM_VALIDATION_PATTERN.md # 보안 패턴 ⭐
 │   │
 │   ├── 🛠️ guides/           # 개발 가이드
 │   │   ├── MCP_GUIDE.md     # MCP 설정 및 사용법
@@ -67,12 +69,14 @@
 ### 📋 기획 문서 (docs/planning/)
 - **README.md**: 프로젝트 개요, 서비스 소개, 주요 기능
 - **ROADMAP.md**: 개발 로드맵, 마일스톤, 단계별 계획
+- **VISUALIZATION_EXPANSION.md**: 실물 및 추상 데이터 시각화 확장 전략 ⭐
 
 ### 🏗️ 기술 문서 (docs/technical/)
 - **ARCHITECTURE.md**: 시스템 아키텍처, 기술 스택, 데이터 플로우
 - **AI_MODELS.md**: AI 모델 선정 및 비교, 파이프라인 구성
 - **AI_INTEGRATION.md**: AI 모듈 연동 가이드 (준비 중)
 - **SECURITY.md**: 보안 가이드, 인증/인가, API 보안
+- **JWT_CLAIM_VALIDATION_PATTERN.md**: JWT 클레임 검증 보안 패턴
 
 ### 🛠️ 개발 가이드 (docs/guides/)
 - **MCP_GUIDE.md**: Figma & Notion MCP 설정 및 사용법
@@ -120,5 +124,3 @@ python upload_to_notion.py
 ---
 
 *이 구조는 프로젝트 진행에 따라 업데이트됩니다.*
-
-

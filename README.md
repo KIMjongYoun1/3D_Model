@@ -13,14 +13,16 @@
 - **FitMe** / **TryOn3D** / **VirtualFit**
 
 ### 핵심 가치
-> "옷을 사기 전에 내 모습으로 미리 입어본다"
+> "보이지 않는 것을 보이게, 입어보지 못한 것을 입어보게"
+> (Making the invisible visible, Wearing the unworn)
 
 ### 주요 서비스 기능
 
-#### 1. 사용자 관리 서비스
-- 회원가입/로그인 (JWT 인증)
-- 프로필 관리
-- 비밀번호 암호화 (BCrypt)
+#### 1. 3D 시각화 플랫폼 (Universal 3D Visualization) ⭐
+- **가상 피팅**: 의상 업로드 및 AI 기반 실착 시뮬레이션 (IDM-VTON)
+- **개인화 아바타**: 얼굴 메시 기반 아바타 생성 (MediaPipe)
+- **데이터 시각화**: JSON/로그 등 추상적 데이터를 3D 공간에 시각화 (Three.js)
+- **인터랙티브 뷰어**: 멀티 앵글 탐색 및 시나리오 캡처
 
 #### 2. 구독 관리 서비스
 - 구독 플랜 관리 (Free, Basic, Pro, Unlimited)
