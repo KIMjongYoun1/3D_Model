@@ -146,11 +146,17 @@ async def health():
     return {"status": "healthy"}
 
 # API 라우터 등록
-from app.api.v1 import tryon_router, garments_router, avatars_router
+from app.api.v1 import (
+    tryon_router, 
+    garments_router, 
+    avatars_router, 
+    visualizations_router
+)
 
 app.include_router(tryon_router, prefix="/api/v1")
 app.include_router(garments_router, prefix="/api/v1")
 app.include_router(avatars_router, prefix="/api/v1")
+app.include_router(visualizations_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,66 +1,63 @@
 """
-Garments API 엔드포인트
+의류 관리 API 라우터
+- 클라이언트의 요청을 받아 GarmentService를 호출합니다.
 """
-from fastapi import APIRouter, Depends, HTTPException
-from uuid import UUID
-from typing import List
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List, Optional
+from uuid import UUID
+
 from app.core.database import get_db
-from app.core.security import get_current_user
-from app.models.user import User
-from app.models.garment import Garment
-from app.schemas.garment import GarmentCreate, GarmentResponse
+from app.schemas.garment import GarmentResponse
+from app.services.garment_service import GarmentService
+# (주의) 현재는 가짜 유저 ID를 사용합니다. 나중에 JWT 연동 시 수정됩니다.
+FAKE_USER_ID = UUID("550e8400-e29b-41d4-a716-446655440000")
 
 router = APIRouter(prefix="/garments", tags=["Garments"])
 
-
-@router.post("/", response_model=GarmentResponse, status_code=201)
-async def create_garment(
-    request: GarmentCreate,
-    current_user: User = Depends(get_current_user),
+@router.post("/upload", response_model=GarmentResponse, status_code=status.HTTP_201_CREATED)
+async def upload_garment(
+    name: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     """
-    의상 업로드
-    
-    역할:
-    - 의상 이미지 업로드 및 저장
-    - 의상 정보를 데이터베이스에 저장
-    
-    TODO: 구현 필요
+    [POST] 의류 이미지 업로드 API
+    - 사용자가 보낸 파일과 정보를 받아 저장합니다.
     """
-    pass
-
-
-@router.get("/", response_model=List[GarmentResponse])
-async def list_garments(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    의상 목록 조회
+    service = GarmentService(db)
     
-    역할:
-    - 현재 사용자의 의상 목록 조회
-    
-    TODO: 구현 필요
-    """
-    pass
+    # 실제 서비스 호출
+    try:
+        new_garment = await service.upload_garment(
+            user_id=FAKE_USER_ID, 
+            file=file, 
+            name=name, 
+            category=category
+        )
+        return new_garment
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"업로드 중 오류 발생: {str(e)}"
+        )
 
+@router.get("", response_model=List[GarmentResponse])
+def list_my_garments(db: Session = Depends(get_db)):
+    """
+    [GET] 내 의류 목록 조회 API
+    """
+    service = GarmentService(db)
+    return service.get_user_garments(FAKE_USER_ID)
 
 @router.get("/{garment_id}", response_model=GarmentResponse)
-async def get_garment(
-    garment_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def get_garment_detail(garment_id: UUID, db: Session = Depends(get_db)):
     """
-    의상 조회
-    
-    역할:
-    - 특정 의상 정보 조회
-    
-    TODO: 구현 필요
+    [GET] 특정 의류 상세 조회 API
     """
-    pass
-
+    service = GarmentService(db)
+    garment = service.get_garment(garment_id)
+    if not garment:
+        raise HTTPException(status_code=404, detail="의류를 찾을 수 없습니다.")
+    return garment

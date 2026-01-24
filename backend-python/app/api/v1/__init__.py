@@ -4,6 +4,7 @@
 from .tryon import router as tryon_router
 from .garments import router as garments_router
 from .avatars import router as avatars_router
+from .visualizations import router as visualizations_router
 
 __all__ = ["tryon_router", "garments_router", "avatars_router"]
 

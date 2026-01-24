@@ -12,9 +12,9 @@ spring:
   # - password: DB 비밀번호 (환경 변수 DB_PASSWORD 우선)
   # - driver-class-name: PostgreSQL JDBC 드라이버
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/virtual_tryon}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USER:model_dev}
+    password: ${DB_PASSWORD:dev1234}
     driver-class-name: org.postgresql.Driver
   
   # JPA/Hibernate 설정

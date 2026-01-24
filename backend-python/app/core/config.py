@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     # 데이터베이스 설정
     # ===================
     # PostgreSQL 연결 URL
-    # 형식: postgresql://사용자명:비밀번호@호스트:포트/데이터베이스명
-    database_url: str = "postgresql://postgres:postgres@localhost:5432/virtual_tryon"
+    # 형식: postgresql+psycopg://사용자명:비밀번호@호스트:포트/데이터베이스명
+    # (psycopg2 대신 현대적인 psycopg (v3) 드라이버를 사용하도록 지정합니다)
+    database_url: str = "postgresql+psycopg://model_dev:dev1234@localhost:5432/postgres"
     
     # ===================
     # Redis 설정
