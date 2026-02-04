@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column('data_type', sa.String(length=50), nullable=False),
         sa.Column('raw_data', sa.JSON(), nullable=True),
         sa.Column('mapping_data', sa.JSON(), nullable=True),
-        sa.Column('model_url', sa.String(length=500), nullable=True),
+        sa.Column('result_model_url', sa.String(length=500), nullable=True), # 확실하게 추가
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
@@ -34,4 +34,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table('visualization_data')
-

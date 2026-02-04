@@ -35,39 +35,24 @@ async def lifespan(app: FastAPI):
     # ===================
     
     # 데이터베이스 마이그레이션 자동 실행
-    # - Alembic을 사용하여 데이터베이스 스키마를 최신 상태로 업데이트
-    # - 애플리케이션 시작 시 자동으로 실행되어 수동 작업 불필요
     try:
         from alembic.config import Config
         from alembic import command
         import os
         
-        # Alembic 설정 파일 경로 확인
-        # - backend-python/alembic.ini 파일 경로 생성
-        # - os.path.join(): 운영체제에 맞는 경로 구분자 사용
-        alembic_ini_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+        # Alembic 설정 및 경로 최적화
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        alembic_ini_path = os.path.join(base_dir, "alembic.ini")
         
         if os.path.exists(alembic_ini_path):
-            # Alembic 설정 파일 로드
             alembic_cfg = Config(alembic_ini_path)
-            
-            # 마이그레이션 실행
-            # - command.upgrade(): 최신 버전까지 마이그레이션 실행
-            # - "head": 최신 마이그레이션 버전
-            # - 실행 기록을 확인하여 이미 실행된 마이그레이션은 스킵
+            # 현재 DB를 최신 마이그레이션 버전(head)으로 자동 업데이트
             command.upgrade(alembic_cfg, "head")
-            print("✅ 데이터베이스 마이그레이션 완료")
+            print("✅ 데이터베이스 스키마 체크 및 마이그레이션 완료")
         else:
-            # Alembic 설정 파일이 없는 경우
-            # - 초기 설정이 안 된 상태
-            print("⚠️  alembic.ini 파일을 찾을 수 없습니다. Alembic 초기화가 필요합니다.")
+            print("⚠️ alembic.ini 파일을 찾을 수 없습니다. 경로를 확인해 주세요.")
     except Exception as e:
-        # 마이그레이션 실행 중 오류 발생
-        # - 데이터베이스 연결 실패
-        # - 마이그레이션 파일 오류
-        # - 수동 실행 안내
-        print(f"⚠️  마이그레이션 실행 중 오류: {e}")
-        print("   수동으로 실행: alembic upgrade head")
+        print(f"⚠️ 자동 마이그레이션 실패 (수동 실행 필요): {e}")
     
     # yield: startup과 shutdown의 경계
     # - yield 이전: startup 작업
@@ -150,13 +135,13 @@ from app.api.v1 import (
     tryon_router, 
     garments_router, 
     avatars_router, 
-    visualizations_router
+    mapping_router
 )
 
 app.include_router(tryon_router, prefix="/api/v1")
 app.include_router(garments_router, prefix="/api/v1")
 app.include_router(avatars_router, prefix="/api/v1")
-app.include_router(visualizations_router, prefix="/api/v1")
+app.include_router(mapping_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

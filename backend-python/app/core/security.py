@@ -1,144 +1,46 @@
 """
-보안 관련 유틸리티 (Python Backend)
-- JWT 토큰 검증만 (토큰 발급은 Java Backend에서)
-- 위변조 방지
-
-⚠️ 주의: 로그인/회원가입은 Java Backend에서 처리
-- Python Backend는 Java에서 발급한 JWT 토큰을 검증만 함
-- 비밀번호 해싱, 로그인 로직은 Java Backend에 있음
+보안 및 인증 처리 (Mock Mode)
+- 자바 백엔드의 인증 기능이 완성되기 전까지 가짜 유저를 반환하여 테스트를 지원합니다.
 """
-from passlib.context import CryptContext
-from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
-from app.core.config import settings
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.models.user import User
+from uuid import UUID
 
-# ⚠️ 주의: 비밀번호 해싱과 토큰 발급은 Java Backend에서 처리
-# Python Backend는 JWT 토큰 검증만 수행
+# Bearer 토큰 규격 선언 (Swagger 등에서 인증 버튼 표시용)
+security_scheme = HTTPBearer(auto_error=False)
 
-
-def decode_access_token(token: str) -> Optional[dict]:
+def get_current_user(
+    token: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    db: Session = Depends(get_db)
+) -> User:
     """
-    JWT 액세스 토큰 생성
+    현재 사용자 조회 (Mocking)
     
-    ⭐ 위변조 방지:
-    - HS256 알고리즘으로 서명 생성
-    - 비밀키로 서명하여 위조 불가능
-    - 만료 시간 포함하여 재사용 방지
-    
-    알고리즘: HS256 (HMAC-SHA256)
-    - 서버에서만 검증 가능 (비밀키 필요)
-    - 비밀키로 서명하여 위조 방지
-    
-    JWT 구조:
-    - Header: {"alg": "HS256", "typ": "JWT"}
-    - Payload: {"sub": "user_id", "exp": 1234567890, "iat": 1234567890}
-    - Signature: HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)
-    
-    Args:
-        data: 토큰에 포함할 데이터 (예: {"sub": "user_id"})
-               - sub: subject (사용자 ID)
-               - iat: issued at (발급 시간, 자동 추가)
-        expires_delta: 만료 시간 (timedelta 객체)
-                      - None이면 settings.jwt_expire_minutes 사용
-                      - 예: timedelta(minutes=60) = 60분 후 만료
-        
-    Returns:
-        JWT 토큰 문자열 (예: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    ⭐ 개발 단계 예외 처리:
+    - 실제 토큰 검증 로직을 생략합니다.
+    - 데이터베이스에 이미 존재하는 'model_dev' 또는 테스트 유저를 항상 반환합니다.
     """
-    # 데이터 복사 (원본 데이터 변경 방지)
-    to_encode = data.copy()
     
-    # 발급 시간 추가 (위변조 탐지용)
-    to_encode.update({"iat": datetime.utcnow()})
+    # 1. 테스트용 고정 유저 ID (아까 DB에 수동으로 넣은 ID)
+    test_user_id = UUID("550e8400-e29b-41d4-a716-446655440000")
     
-    # 만료 시간 설정
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_expire_minutes)
+    # 2. DB에서 유저 조회
+    user = db.query(User).filter(User.id == test_user_id).first()
     
-    # Payload에 만료 시간 추가
-    to_encode.update({"exp": expire})
-    
-    # JWT 토큰 생성 (서명 포함)
-    # ⭐ 위변조 방지: 비밀키로 서명하여 위조 불가능
-    encoded_jwt = jwt.encode(
-        to_encode,                    # Payload
-        settings.jwt_secret,          # Secret Key (서명용 비밀키)
-        algorithm=settings.jwt_algorithm  # 알고리즘 (HS256)
-    )
-    return encoded_jwt
-
-
-def decode_access_token(token: str) -> Optional[dict]:
-    """
-    JWT 토큰 디코딩 및 검증
-    
-    ⚠️ 역할: Java Backend에서 발급한 JWT 토큰을 검증만 함
-    - 토큰 발급은 Java Backend에서 처리
-    - Python Backend는 검증만 수행
-    
-    ⭐ 위변조 방지:
-    - 서명 검증: 비밀키로 서명이 올바른지 확인
-    - 만료 시간 검증: exp 필드 확인
-    - 알고리즘 검증: HS256만 허용
-    
-    검증 항목:
-    - 서명 검증: Secret Key로 서명이 올바른지 확인
-    - 만료 시간 검증: exp 필드가 현재 시간보다 이후인지 확인
-    - 알고리즘 검증: 지정된 알고리즘(HS256)으로 생성되었는지 확인
-    
-    Args:
-        token: JWT 토큰 문자열 (Java Backend에서 발급)
-        
-    Returns:
-        디코딩된 토큰 데이터 (Payload)
-        - 성공: {"sub": "user_id", "exp": 1234567890, ...}
-        - 실패: None (만료, 서명 오류, 형식 오류 등)
-    """
-    try:
-        # JWT 토큰 검증 및 디코딩
-        # ⭐ 위변조 방지: 서명 검증 자동 수행
-        # ⚠️ Java Backend와 같은 JWT_SECRET 사용해야 함
-        payload = jwt.decode(
-            token,                        # JWT 토큰 문자열
-            settings.jwt_secret,          # Secret Key (Java와 동일한 키 사용)
-            algorithms=[settings.jwt_algorithm]  # 허용할 알고리즘 (HS256만 허용)
+    # 3. 만약 유저가 없다면 테스트가 불가능하므로 에러 발생 (수동 생성 가이드)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="테스트용 유저가 DB에 없습니다. INSERT 쿼리를 실행해 주세요."
         )
-        return payload
-    except JWTError:
-        # 토큰 검증 실패
-        # - 만료된 토큰
-        # - 잘못된 서명 (위변조 시도)
-        # - 형식 오류
-        return None
+        
+    # 토큰이 있든 없든 일단 개발 중에는 이 유저로 로그인된 것으로 간주
+    return user
 
-
-def get_current_user():
-    """
-    현재 인증된 사용자 조회 (의존성 함수)
-    
-    ⭐ 탈취/위변조 방지:
-    - Authorization 헤더에서만 토큰 추출
-    - 토큰 검증 강화
-    - 사용자 존재 여부 확인
-    
-    TODO: 구현 필요
-    1. HTTPBearer로 토큰 추출
-    2. decode_access_token으로 토큰 검증
-    3. DB에서 사용자 조회
-    4. 사용자 반환 또는 예외 발생
-    """
-    from fastapi import Depends, HTTPException, status
-    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-    from sqlalchemy.orm import Session
-    from app.core.database import get_db
-    from app.models.user import User
-    
-    # TODO: 실제 구현 필요
-    # 1. HTTPBearer로 토큰 추출
-    # 2. decode_access_token으로 토큰 검증
-    # 3. DB에서 사용자 조회
-    # 4. 사용자 반환 또는 예외 발생
-    pass
+def decode_access_token(token: str) -> Optional[dict]:
+    """토큰 디코딩 (개발 단계에서는 항상 성공한 것으로 가정하거나 무시 가능)"""
+    return {"sub": "550e8400-e29b-41d4-a716-446655440000"}

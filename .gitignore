@@ -29,6 +29,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
 
 # Vercel
 .vercel
@@ -66,10 +67,13 @@ target/
 *.swp
 *.swo
 *~
+*.iml
+*.ipr
+*.iws
 
 # OS
 Thumbs.db
-.DS_Store
+desktop.ini
 
 # Docker
 .dockerignore
@@ -83,7 +87,6 @@ models/
 
 # Sensitive information
 *.key
-*.pem
 *.cert
 *.crt
 secrets/
@@ -101,7 +104,6 @@ backend-java/src/main/resources/application.yml
 !.github/**/*.yaml
 
 # Personal thoughts and notes
-# excluded/ 디렉토리 전체 - Git에 커밋하지 않을 모든 내용
 excluded/
 *.personal.md
 *.think.md
@@ -112,37 +114,14 @@ PROJECT_ASSESSMENT.md
 COST.md
 
 # API Keys and tokens
-.env
-.env.local
-.env.*.local
-*.env
 config/secrets.yaml
 config/secrets.yml
 
-# Temporary files
+# Temporary files & Storage (Important!)
 *.tmp
 *.temp
 *.bak
 *.backup
-*.swp
-*.swo
-*~
-
-# OS specific
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# IDE specific
-.idea/
-.vscode/
-*.iml
-*.ipr
-*.iws
-
-# Logs
-*.log
+backend-python/storage/
+tests/
 logs/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
