@@ -12,7 +12,7 @@ class MappingBase(BaseModel):
     raw_data: Optional[Union[Dict[str, Any], str]] = Field(None, description="원본 데이터 (JSON 또는 Text)")
 
 class MappingCreate(MappingBase):
-    pass
+    options: Optional[Dict[str, Any]] = Field(None, description="시각화 옵션 (render_type, focus_mode 등)")
 
 class MappingResponse(MappingBase):
     id: UUID

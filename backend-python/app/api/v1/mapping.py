@@ -25,7 +25,9 @@ async def create_mapping(
         # 1. 3D 좌표 데이터 생성
         mapping_data = await mapping_orchestrator.process_data_to_3d(
             request.data_type, 
-            request.raw_data
+            request.raw_data,
+            db=db,
+            options=request.options
         )
 
         # 2. DB 객체 생성
@@ -61,7 +63,8 @@ async def create_mapping_from_file(
 
         mapping_data = await mapping_orchestrator.process_data_to_3d(
             "file_analysis", 
-            extracted_data
+            extracted_data,
+            db=db
         )
 
         db_mapping = MappingData(
