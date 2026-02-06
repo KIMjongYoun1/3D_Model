@@ -1,15 +1,15 @@
-# 빠른 시작 가이드
+# 빠른 시작 가이드 (Quick Start)
 
-프로젝트 개발을 시작하기 위한 핵심 정보를 정리한 문서입니다.
+프로젝트 개발을 시작하기 위한 핵심 정보를 정리한 문서입니다. 본 가이드는 **Java 21**, **Python 3.12**, **Next.js** 기반의 멀티 백엔드 환경에 최적화되어 있습니다.
 
 ## 필수 설치 항목
 
 ### 공통 필수
-- **Node.js**: v22.x 이상
-- **npm**: v10.x 이상  
-- **Java**: 17 이상
-- **Python**: 3.12
-- **Docker Desktop**: 최신 버전
+- **Node.js**: v22.x 이상 (LTS 권장)
+- **npm**: v10.x 이상
+- **Java**: **21** (안정화된 최신 표준)
+- **Python**: **3.12** (3.13은 일부 라이브러리 미지원으로 3.12 권장)
+- **Docker Desktop**: 최신 버전 (PostgreSQL, Redis 실행용)
 - **Git**: 최신 버전
 
 ### 설치 확인
@@ -21,6 +21,8 @@ node --version && npm --version && java -version && py -3.12 --version && mvn --
 node --version && npm --version && java -version && python3.12 --version && mvn --version && docker --version
 ```
 
+---
+
 ## 초기 설정 (5분)
 
 ### 1. 저장소 클론
@@ -29,95 +31,94 @@ git clone <repository-url>
 cd 3D_Model
 ```
 
-### 2. Frontend 의존성 설치
+### 2. 환경 변수 설정
+루트 폴더에 `.env` 파일을 생성하고 다음 내용을 입력합니다. (Git에 노출되지 않도록 주의)
+```env
+# Database
+DATABASE_URL=postgresql://model_dev:dev1234@localhost:5432/postgres
+DB_USER=model_dev
+DB_PASSWORD=dev1234
+
+# API Keys
+GEMINI_API_KEY=your_gemini_api_key
+
+# Social Auth (Naver)
+NAVER_CLIENT_ID=your_naver_client_id
+NAVER_CLIENT_SECRET=your_naver_client_secret
+NAVER_REDIRECT_URI=http://localhost:3000/api/auth/callback/naver
+```
+
+### 3. Frontend 의존성 설치
 ```bash
 npm install
 ```
 
-### 3. Python 가상환경 설정
-
-**Windows:**
-```powershell
-py -3.12 -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-**macOS:**
+### 4. Python 가상환경 및 DB 마이그레이션
 ```bash
+# 가상환경 생성 및 활성화 (macOS 기준)
 python3.12 -m venv venv
 source venv/bin/activate
+
+# 의존성 설치
 pip install -r requirements.txt
+
+# DB 마이그레이션 (Alembic)
+cd backend-python
+alembic upgrade head
 ```
 
-### 4. Docker 컨테이너 실행
+### 5. Java 백엔드 설정 (Lombok 미사용)
+본 프로젝트는 공유 개발 편의를 위해 **Lombok을 사용하지 않습니다.**
+- IDE(Cursor/VSCode)에서 `Java Extension Pack` 설치 권장
+- `Command + Shift + P` -> `Java: Clean Java Language Server Workspace` 실행하여 Classpath 동기화
+
+---
+
+## 개발 서버 실행
+
+### 1. Docker 컨테이너 (DB/Redis)
 ```bash
 docker-compose up -d postgres redis
 ```
 
-### 5. 환경 변수 설정
-`.env.local` 파일 생성:
-```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/virtual_tryon
-REDIS_URL=redis://localhost:6379/0
-NEXT_PUBLIC_API_URL=http://localhost:8080
-```
-
-## 개발 서버 실행
-
-### Frontend
+### 2. Frontend (Next.js)
 ```bash
 npm run dev
-# http://localhost:3000
+# 접속 주소: http://localhost:3000
 ```
 
-### Backend Python
+### 3. Backend Python (FastAPI - AI/Mapping)
 ```bash
-# 가상환경 활성화 후
-uvicorn backend-python.main:app --reload
-# http://localhost:8000
+# 가상환경 활성화 상태에서 루트 폴더 기준
+uvicorn backend-python.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Backend Java
+### 4. Backend Java (Spring Boot - Auth/Payment)
 ```bash
 cd backend-java
-mvn spring-boot:run
-# http://localhost:8080
+./mvnw spring-boot:run
+# 접속 주소: http://localhost:8080
 ```
 
-## 오류 발생 시
+---
 
-### AI 활용 (Cursor 표준)
-1. 오류 메시지를 Cursor 채팅에 복사
-2. "이 오류 해결 방법" 요청
-3. 제안된 해결 방법 적용
+## IDE 최적화 설정 (Cursor/VSCode)
 
-### 일반적인 오류
+프로젝트 루트의 `.vscode` 폴더에 공유 설정이 포함되어 있습니다.
+- **Run and Debug**: `F5` 키를 눌러 `VirtualTryOnApplication (Java Backend)`를 즉시 실행 가능합니다.
+- **자동 빌드**: 파일 저장 시 자바 프로젝트가 자동으로 빌드됩니다.
 
-**Python 가상환경 활성화 오류 (Windows):**
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+---
 
-**포트 충돌:**
-```bash
-# Windows
-netstat -ano | findstr :3000
+## 주요 문제 해결 (Troubleshooting)
 
-# macOS
-lsof -i :3000
-```
+- **Java Classpath 에러**: `Clean Java Language Server Workspace` 명령을 실행하세요.
+- **Python Tokenizers 빌드 에러**: Python 3.13 대신 **3.12**를 사용 중인지 확인하세요.
+- **DB 연결 에러**: `.env` 파일의 `DB_HOST`가 `localhost`로 설정되어 있는지 확인하세요.
 
-## 상세 가이드
+---
 
-- **환경 설정**: [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)
-- **프로젝트 구조**: [STRUCTURE.md](./STRUCTURE.md)
-- **개발 로드맵**: [planning/ROADMAP.md](./planning/ROADMAP.md)
-- **시스템 아키텍처**: [technical/ARCHITECTURE.md](./technical/ARCHITECTURE.md)
-
-## 다음 단계
-
-1. [개발 로드맵](./planning/ROADMAP.md) 확인
-2. [시스템 아키텍처](./technical/ARCHITECTURE.md) 이해
-3. Phase 0부터 순차적으로 개발 진행
-
+## 상세 문서 링크
+- [프로젝트 개요](./docs/PROJECT_OVERVIEW.md)
+- [디자인 시스템](./docs/FRONTEND_DESIGN_SYSTEM.md)
+- [소셜 로그인 설정](./docs/SOCIAL_AUTH_SETUP.md)
