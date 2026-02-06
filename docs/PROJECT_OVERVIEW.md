@@ -1,86 +1,64 @@
-# 🌌 QUANTUM-VIZ: AI 기반 범용 3D 데이터 매핑 및 시각화 플랫폼
+# 🚀 Quantum Studio 프로젝트 개요 (Project Overview)
 
-> **"보이지 않는 데이터를 입체적으로 해석하고, 입어보지 못한 가치를 실현하다."**  
-> 본 프로젝트는 복잡한 추상 데이터(JSON, 문서, 코드)와 물리적 객체(의류)를 AI로 분석하여 인터랙티브한 3D 공간에 재구성하는 하이엔드 시각화 솔루션입니다.
+Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화하고 분석하는 **Universal 3D Visualization Platform**입니다.
 
----
-
-## 1. 🚀 프로젝트 핵심 가치 (Identity)
-
-전통적인 시각화 도구들이 2D 차트나 단순한 리스트에 머물러 있을 때, **QuantumViz**는 데이터를 3D 캔버스 공간의 '노드'와 '관계'로 치환합니다. 
-- **물리적 시각화**: AI 기반 가상 피팅(Virtual Try-On)을 통한 실물 경험의 디지털화.
-- **추상적 시각화**: 복잡한 계약서, 법정 판례, 시스템 로그를 입체적인 토폴로지(Topology) 맵으로 변환하여 데이터 간의 숨겨진 상관관계를 통찰.
+## 🌟 핵심 가치
+- **비정형 데이터의 구조화**: JSON, 로그, 문서(PDF/TXT/Excel) 등 복잡한 데이터를 AI가 분석하여 시각적 노드와 관계로 변환합니다.
+*   **지능형 3D 엔진**: 데이터 간의 상관관계를 GPU 가속 3D 캔버스에 실시간으로 렌더링합니다.
+- **하이브리드 AI 라우팅**: 클라우드 AI(Gemini)와 로컬 모델을 결합하여 비용 효율적이고 강력한 분석을 제공합니다.
 
 ---
 
-## 2. 💎 핵심 기능 (Core Features)
+## 🏗 서비스 아키텍처 (Architecture)
 
-### ① 하이브리드 AI 데이터 엔진 (Intelligent Data Engine)
-*   **멀티 모드 분석**: 데이터 성격에 따라 **AUTO(자동)**, **DIAGRAM(관계도)**, **TABLE/BAR(수치/정산)** 모드를 선택하여 맞춤형 분석을 수행합니다.
-*   **실시간 지식 연동**: Google Search Grounding 기능을 통해 최신 법령, 기술 문서, 뉴스 등의 **실시간 근거(References)**를 자동으로 수집합니다.
-*   **데이터 심층 구조화**: `키워드(Key) : 실데이터(Value) : AI해석(Interpretation)`의 3계층 구조로 데이터를 재구성하여 분석의 깊이를 더했습니다.
-*   **기술**: Google Gemini 2.0 기반 클라우드 API(`gemini-flash-latest`)와 로컬 모델(TinyLlama)의 하이브리드 운영.
+프로젝트는 성능과 확장성을 위해 멀티 백엔드 구조를 채택하고 있습니다.
 
-### ② 소셜 기반 통합 인증 시스템 (Social-Auth & JWT)
-*   **소셜 로그인 연동**: 카카오(Kakao) 및 네이버(Naver) API를 통한 간편 로그인 체계를 구축합니다.
-*   **크로스 플랫폼 JWT**: Java(Spring Boot)에서 발행한 인증 토큰을 Python(FastAPI)에서 실시간 검증하는 이종 언어 통합 보안 아키텍처를 채택했습니다.
-*   **보안 게이트웨이**: 모든 AI 분석 및 데이터 매핑 API는 유효한 JWT가 있어야만 접근 가능한 엔터프라이즈급 보안을 지향합니다.
+### 1. Frontend (Next.js 14+)
+- **역할**: 3D 렌더링(Three.js/React Three Fiber), 사용자 인터페이스, 상태 관리.
+- **디자인**: Apple-Clean White 테마, Bento Grid 레이아웃, 공통 UI 컴포넌트 시스템.
 
-### ③ 전면 개방형 스페이셜 스튜디오 (Full-Spatial Studio)
-*   **Full-Screen 3D View**: 헤더와 UI가 투명하게 배치된 **화면 전체 배경 3D** 환경으로 공간감을 극대화했습니다.
-*   **Bottom-Sheet Diagram**: 3D 시점을 가리지 않는 **순수 오버레이 방식**의 하단 다이어그램 바를 통해 데이터 도식을 탐색합니다.
-*   **지능형 카메라 시스템**: 노드 클릭 시 해당 위치로 부드럽게 이동(Focus)하며, 이동 후에도 자유로운 좌표 이동(Panning)이 가능합니다.
+### 2. Java Backend (Spring Boot 3.x)
+- **역할**: 사용자 인증(JWT/소셜 로그인), 결제 시스템, 핵심 비즈니스 로직.
+- **기술 스택**: Java 21, Spring Security, JPA/Hibernate, Flyway(DB Migration), PostgreSQL.
 
-### ③ 스마트 분석 워크플로우 (Smart Neural Input)
-*   **인터랙티브 UI**: 파일 선택 시 명칭 및 상태를 즉시 확인하고, 분석 모드를 직접 선택할 수 있는 직관적인 제어판.
-*   **실시간 라이크 검색**: 방대한 데이터셋에서 키워드와 벨류를 실시간으로 필터링하고 검색 결과로 즉시 점프하는 내비게이션 제공.
-*   **범용 포맷 지원**: PDF, TXT, XLSX, CSV 등 모든 비즈니스 데이터 포맷 대응.
-
-### ④ 고기능 데이터 워크스테이션 (Data Workstation)
-*   **3단 분리 정보창**: `Raw Data`, `AI Interpretation`, `References` 영역이 시각적으로 분리된 고기능 플로팅 윈도우.
-*   **GPU 가속 드래그**: `translate3d` 기반의 지연 없는 초고속 드래그 및 텍스트 복사 기능을 제공합니다.
-
-### ④ 가상 피팅 파이프라인 (AI Virtual Try-On)
-*   사용자 아바타 생성 및 의류 이미지 합성을 통해 패션 도메인의 시각화 유즈케이스를 구현합니다.
+### 3. Python Backend (FastAPI)
+- **역할**: AI 에이전트 서비스, 데이터 매핑 엔진, 비정형 데이터 처리.
+- **기술 스택**: Python 3.12, SQLAlchemy, Alembic(DB Migration), Google Gemini API.
 
 ---
 
-## 3. 🛠 기술 스택 및 선정 이유 (Tech Stack & Justification)
+## 🛠 기술 스택 요약 (Tech Stack)
 
-### 🐍 Python (FastAPI) - AI & Data Mapping Engine
-*   **선정 이유**: PyTorch, Transformers, LangChain 등 세계 최고의 AI 생태계를 가장 효율적으로 활용할 수 있는 언어입니다. 
-*   **역할**: 데이터의 3D 좌표 변환, AI 모델 인퍼런스, 비동기 작업 처리(Celery).
-
-### ☕ Java (Spring Boot) - Business Logic & Security
-*   **선정 이유**: 엔터프라이즈급 안정성과 강력한 보안 체계(Spring Security)를 제공합니다.
-*   **역할**: 사용자 인증(JWT), 구독 및 결제 관리, 데이터베이스 무결성 유지.
-
-### ⚛️ TypeScript (Next.js & Three.js) - immersive Frontend
-*   **선정 이유**: WebGL 기반의 강력한 3D 렌더링 라이브러리인 **Three.js**를 React 환경에서 선언적으로 다룰 수 있습니다.
-*   **역할**: 퀀텀 캔버스 구현, 실시간 UI 인터랙션, 반응형 대시보드.
-
-### 🗄 PostgreSQL & SQLAlchemy/JPA - Unified Storage
-*   **선정 이유**: 구조화된 관계형 데이터와 비구조화된 JSON 데이터를 동시에 저장할 수 있는 최적의 선택입니다.
-*   **역할**: Java와 Python 백엔드가 동일한 DB를 공유하며 데이터 일관성을 유지.
+| 구분 | 기술 |
+| :--- | :--- |
+| **Language** | TypeScript, Java 21, Python 3.12 |
+| **Framework** | Next.js 14, Spring Boot 3.2, FastAPI |
+| **Database** | PostgreSQL, Redis |
+| **3D Engine** | Three.js, React Three Fiber, @react-three/drei |
+| **Style** | Tailwind CSS, Framer Motion |
+| **DevOps** | Docker, Docker Compose |
 
 ---
 
-## 🧠 기술적 도전 과제 및 해결 (Technical Challenges)
+## 📂 프로젝트 구조 (Structure)
 
-1.  **언어 간 보안 장벽 해결**: Java에서 생성된 JWT를 Python에서 완벽하게 검증하는 Cross-Language 인증 체계를 구축했습니다. (현재 개발 편의를 위해 Mocking 처리 중)
-2.  **대규모 노드 시인성 확보**: 데이터가 많아질수록 노드가 겹치는 문제를 해결하기 위해 **Fibonacci Sphere 분산 알고리즘**을 도입하여 3D 공간을 균등하게 활용했습니다.
-3.  **비용 효율적 AI 운영**: 분당 요청 한도를 체크하여 클라우드 API와 로컬 모델을 자동으로 스위칭하는 **폴백(Fallback) 메커니즘**을 구현했습니다. 특히 최신 `gemini-flash-latest` 모델 연동으로 안정성을 강화했습니다.
-4.  **지능형 시각화 분기 로직**: 사용자가 선택한 분석 목적(관계도 vs 통계)에 따라 AI 프롬프트와 3D 렌더링 엔진이 동적으로 협업하는 **멀티 모드 파이프라인**을 구축했습니다.
-5.  **DB 기반 상관관계 확대 해석**: 하드코딩된 규칙이 아닌 DB(`correlation_rules`)에 정의된 지식 클러스터를 바탕으로 데이터 간의 숨겨진 연결 고리를 자동으로 찾아내는 **로컬 상관관계 엔진**을 구현했습니다.
-6.  **실시간 지식 근거 확보**: AI 분석 결과에 구글 검색을 결합하여, 저작권을 준수하는 **원문 링크(URL)와 근거 문구**를 실시간으로 수집하고 시각화합니다.
-7.  **대규모 데이터 최적화**: 100개 이상의 노드가 포함된 JSON 배열을 지능적으로 해체하여 개별 노드로 시각화하고, GPU 가속을 통해 지연 없는 탐색 환경을 구축했습니다.
-8.  **데이터베이스 형상 관리 최적화**: Alembic 마이그레이션 도구를 사용하여 실제 DB 구조와 소스 코드 간의 불일치를 해결하고, 서버 기동 시 자동으로 스키마를 체크하는 안정적인 배포 환경을 구축했습니다.
-9.  **보안 기반 협업 환경**: `.gitignore` 최적화를 통해 대용량 AI 모델 및 민감한 사용자 데이터를 분리하여 깃 저장소의 무결성과 보안을 확보했습니다.
+```text
+3D_Model/
+├── app/                # Next.js App Router (Pages)
+├── components/         # React Components
+│   ├── common/         # Header, Footer 등 공통 레이아웃
+│   ├── ui/             # Button, Card, Modal 등 원자 단위 컴포넌트
+│   ├── studio/         # 3D 스튜디오 전용 컴포넌트
+│   └── shared/         # 비즈니스 로직 공유 컴포넌트
+├── backend-java/       # Spring Boot 프로젝트
+├── backend-python/     # FastAPI 프로젝트
+├── docs/               # 프로젝트 문서 (통합 관리)
+└── public/             # 정적 자산
+```
 
 ---
 
-## 🔮 향후 확장 방향 (Future Vision)
-
-*   **B2B 아키텍처 모니터링**: 서버 간 트래픽 흐름을 실시간 3D '빛의 흐름'으로 시각화.
-*   **코드 시각화 (Code-to-Studio)**: 소스 코드를 분석하여 함수 간의 호출 관계를 3D 숲(Forest) 형태로 시각화.
-*   **VR/AR 확장**: 웹을 넘어 오큘러스 등 VR 기기에서 데이터를 직접 손으로 만지며 분석하는 환경 구축.
+## 🔗 관련 문서
+- [빠른 시작 가이드](../QUICK_START.md)
+- [프론트엔드 디자인 가이드](./FRONTEND_DESIGN_SYSTEM.md)
+- [소셜 로그인 가이드](./SOCIAL_AUTH_SETUP.md)
