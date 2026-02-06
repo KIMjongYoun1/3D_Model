@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 
 const steps = [
   {
@@ -46,30 +48,14 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
     }
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-fade-in" />
-      
-      {/* Guide Card */}
-      <div className="relative w-[400px] bg-white/90 backdrop-blur-2xl p-10 rounded-[3rem] shadow-2xl border border-white animate-fade-in flex flex-col gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Studio Guide</span>
-          </div>
-          <h3 className="text-2xl font-black text-slate-900 tracking-tighter italic">
-            {steps[currentStep].title}
-          </h3>
-        </div>
-
-        <p className="text-slate-600 text-sm leading-relaxed font-medium">
-          {steps[currentStep].content}
-        </p>
-
-        <div className="flex justify-between items-center mt-4">
+    <Modal
+      isOpen={isVisible}
+      onClose={onComplete}
+      title="Studio Guide"
+      size="sm"
+      footer={
+        <div className="flex justify-between items-center w-full">
           <div className="flex gap-1.5">
             {steps.map((_, idx) => (
               <div 
@@ -81,23 +67,25 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
             ))}
           </div>
           
-          <button 
+          <Button 
+            variant="primary"
             onClick={handleNext}
-            className="px-8 py-3 bg-slate-900 hover:bg-black text-white text-[11px] font-black rounded-2xl transition-all shadow-xl shadow-black/10"
+            className="px-8 py-3 bg-slate-900 hover:bg-black"
           >
             {currentStep === steps.length - 1 ? '스튜디오 시작하기' : '다음 단계'}
-          </button>
+          </Button>
         </div>
-
-        {/* Skip Button */}
-        <button 
-          onClick={onComplete}
-          className="absolute top-6 right-8 text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
-        >
-          Skip
-        </button>
+      }
+    >
+      <div className="space-y-6">
+        <h3 className="text-2xl font-black text-slate-900 tracking-tighter italic">
+          {steps[currentStep].title}
+        </h3>
+        <p className="text-slate-600 text-sm leading-relaxed font-medium">
+          {steps[currentStep].content}
+        </p>
       </div>
-    </div>
+    </Modal>
   );
 };
 

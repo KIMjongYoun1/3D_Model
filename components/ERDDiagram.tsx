@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Card } from "./ui/Card";
 
 interface ERDDiagramProps {
   data: any;
@@ -25,13 +26,16 @@ export default function ERDDiagram({ data, openNodes, topNodeId, onNodeClick, sh
 
   if (data.render_type === "monolith") {
     return (
-      <div className="w-full h-full bg-white/20 p-10 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 shadow-xl">
-          <h2 className="text-xl font-black mb-6 italic uppercase text-slate-900 tracking-tighter">Raw Data Stream</h2>
+      <div className="w-full h-full bg-white/20 p-10 flex flex-center justify-center">
+        <Card 
+          variant="default" 
+          title="Raw Data Stream"
+          className="w-full max-w-md shadow-xl"
+        >
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 font-mono text-xs text-slate-600 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data.content}
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -45,11 +49,12 @@ export default function ERDDiagram({ data, openNodes, topNodeId, onNodeClick, sh
           const isTop = topNodeId === node.id;
           
           return (
-            <div
+            <Card
               id={`erd-node-${node.id}`}
               key={node.id}
               onClick={() => onNodeClick(node)}
-              className={`w-full h-[260px] bg-white border-2 rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 flex flex-col
+              variant="bento"
+              className={`w-full h-[260px] flex flex-col !p-0
                 ${isTop ? 'border-blue-600 shadow-[0_40px_80px_rgba(37,99,235,0.2)] scale-[1.02] -translate-y-8 z-50' : isSelected ? 'border-blue-400 opacity-100 z-40' : 'border-slate-100 opacity-80 hover:opacity-100 z-10 hover:border-slate-300'}`}
             >
               <div className={`px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] border-b flex items-center justify-between flex-shrink-0
@@ -96,7 +101,7 @@ export default function ERDDiagram({ data, openNodes, topNodeId, onNodeClick, sh
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           );
         })}
       </div>

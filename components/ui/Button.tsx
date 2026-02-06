@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'naver' | 'kakao';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
   onClick?: () => void;
@@ -25,7 +25,9 @@ export const Button = ({
     primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 disabled:bg-slate-200 disabled:text-slate-400',
     secondary: 'bg-slate-900 text-white hover:bg-black shadow-lg shadow-black/10 disabled:bg-slate-200 disabled:text-slate-400',
     outline: 'border-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:border-slate-100 disabled:text-slate-300',
-    ghost: 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+    ghost: 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900',
+    naver: 'bg-[#03C75A] text-white hover:bg-[#02b351] shadow-lg shadow-green-900/10',
+    kakao: 'bg-[#FEE500] text-[#191919] hover:bg-[#fada00] shadow-lg shadow-yellow-900/10',
   };
 
   const sizeStyles = {

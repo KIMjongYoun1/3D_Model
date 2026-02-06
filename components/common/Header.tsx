@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
 
 const Header = () => {
   const pathname = usePathname();
@@ -105,25 +106,30 @@ const Header = () => {
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Logged in as</span>
               <span className="text-[12px] font-bold text-slate-900">{userName}</span>
             </div>
-            <button 
+            <Button 
+              variant="outline"
               onClick={handleLogout}
-              className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black rounded-full transition-all border border-slate-200"
+              className="text-[10px] px-5 py-2"
             >
               LOGOUT
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            <button 
+            <Button 
+              variant="naver"
               onClick={handleNaverLogin}
-              className="flex items-center gap-2 px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-green-900/10"
+              className="text-[10px] px-4 py-2 flex items-center gap-2"
             >
               <span className="w-4 h-4 bg-white text-[#03C75A] rounded-sm flex items-center justify-center text-[10px] font-black">N</span>
               NAVER LOGIN
-            </button>
-            <button className="px-5 py-2 bg-slate-900 hover:bg-black text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-black/10">
+            </Button>
+            <Button 
+              variant="secondary"
+              className="text-[10px] px-5 py-2"
+            >
               LOGIN
-            </button>
+            </Button>
           </>
         )}
       </div>

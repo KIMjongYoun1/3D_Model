@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface CardProps {
+  id?: string;
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
@@ -29,6 +30,7 @@ export const Card = ({
 
   return (
     <div
+      id={id}
       className={`${baseStyles} ${variantStyles[variant]} ${interactiveStyles} ${className}`}
       onClick={onClick}
     >

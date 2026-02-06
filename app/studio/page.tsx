@@ -2,9 +2,13 @@
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
-import QuantumCanvas, { DraggableWindow } from "@/components/QuantumCanvas";
+import QuantumCanvas from "@/components/QuantumCanvas";
+import { DraggableWindow } from "@/components/shared/DraggableWindow";
 import ERDDiagram from "@/components/ERDDiagram";
 import Onboarding from "@/components/studio/Onboarding";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 
 export default function QuantumStudioPage() {
   const [vizData, setVizData] = useState<any>(null);
@@ -201,9 +205,13 @@ export default function QuantumStudioPage() {
             <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 transform ${showDiagram ? 'translate-x-4' : 'translate-x-0'}`} />
           </button>
         </div>
-        <button onClick={() => setIsEditorOpen(true)} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-full transition-all shadow-md shadow-blue-600/10">
+        <Button 
+          variant="primary"
+          onClick={() => setIsEditorOpen(true)} 
+          className="px-4 py-1.5 text-[10px]"
+        >
           + NEW MAPPING
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 flex w-full overflow-hidden relative bg-white">
@@ -238,8 +246,14 @@ export default function QuantumStudioPage() {
             <div className="h-12 border-b border-slate-100/50 flex items-center px-12 justify-between bg-white/10">
               <div className="flex items-center gap-6 flex-1">
                 <div className="relative w-64">
-                  <input type="text" placeholder="Search nodes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/50 backdrop-blur-md border border-slate-200/50 rounded-xl px-4 py-1.5 text-[11px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 transition-all" />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">🔍</div>
+                  <Input 
+                    type="text" 
+                    placeholder="Search nodes..." 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    className="!space-y-0"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">🔍</div>
                 </div>
                 <div className="flex gap-2 overflow-x-auto max-w-[500px] no-scrollbar py-1">
                   {searchTerm && filteredNodes.map((node: any) => (
@@ -288,11 +302,42 @@ export default function QuantumStudioPage() {
               <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform ${selectedFile ? 'bg-blue-600 scale-110' : 'bg-slate-200 group-hover:scale-110'}`}>{selectedFile ? <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>}</div>
               {selectedFile ? <div className="space-y-1"><p className="text-sm font-black text-blue-600 truncate px-4">{selectedFile.name}</p><p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Ready to process</p></div> : <><p className="text-sm font-bold text-slate-700">Drop your data files here</p><p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">PDF, TXT, Excel, CSV supported</p></>}
             </div>
-            {selectedFile && <div className="mt-4 flex gap-2"><button onClick={processFileUpload} disabled={loading} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-2xl transition-all shadow-lg shadow-blue-600/20">{loading ? "ANALYZING..." : "START AI ANALYSIS"}</button><button onClick={() => setSelectedFile(null)} className="px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black rounded-2xl transition-all border border-slate-200">CANCEL</button></div>}
+            {selectedFile && (
+              <div className="mt-4 flex gap-2">
+                <Button 
+                  variant="primary"
+                  onClick={processFileUpload} 
+                  disabled={loading} 
+                  className="flex-1 py-4"
+                >
+                  {loading ? "ANALYZING..." : "START AI ANALYSIS"}
+                </Button>
+                <Button 
+                  variant="ghost"
+                  onClick={() => setSelectedFile(null)} 
+                  className="px-6 py-4"
+                >
+                  CANCEL
+                </Button>
+              </div>
+            )}
           </div>
           <div className="relative flex items-center mb-6"><div className="flex-1 h-px bg-slate-100"></div><span className="px-4 text-[10px] text-slate-400 font-black uppercase tracking-widest">OR ENTER TEXT</span><div className="flex-1 h-px bg-slate-100"></div></div>
-          <textarea value={jsonInput} onChange={(e) => setJsonInput(e.target.value)} className="flex-1 w-full bg-slate-50 border border-slate-200 rounded-3xl p-8 font-mono text-sm text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none shadow-inner" placeholder="Paste your raw data or logic here..." spellCheck={false} />
-          <button onClick={handleSubmit} disabled={loading} className="mt-8 w-full py-5 bg-slate-900 hover:bg-black text-white font-black rounded-2xl transition-all shadow-2xl shadow-black/10">{loading ? "PROCESSING..." : "EXECUTE 3D ENGINE"}</button>
+          <Input 
+            type="textarea"
+            value={jsonInput} 
+            onChange={(e) => setJsonInput(e.target.value)} 
+            className="flex-1"
+            placeholder="Paste your raw data or logic here..."
+          />
+          <Button 
+            variant="primary"
+            onClick={handleSubmit} 
+            disabled={loading} 
+            className="mt-8 w-full py-5 bg-slate-900 hover:bg-black shadow-2xl shadow-black/10"
+          >
+            {loading ? "PROCESSING..." : "EXECUTE 3D ENGINE"}
+          </Button>
         </div>
       </div>
     </div>
