@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 
 export default function MyPage() {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null: loading, true/false: status
   const [user, setUser] = useState({
     name: '',
     email: '',
@@ -17,6 +18,13 @@ export default function MyPage() {
   });
 
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setIsLoggedIn(false);
+      return;
+    }
+    
+    setIsLoggedIn(true);
     // 로컬 스토리지에서 기본 정보 로드
     const name = localStorage.getItem('userName') || '사용자';
     const email = localStorage.getItem('userEmail') || '이메일 정보 없음';
@@ -30,6 +38,15 @@ export default function MyPage() {
       joinDate: new Date().toLocaleDateString()
     });
   }, []);
+
+  const handleNaverLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+    const redirectUri = encodeURIComponent('http://localhost:3000/api/auth/callback/naver');
+    const state = Math.random().toString(36).substring(7);
+    const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
+    localStorage.setItem('naver_auth_state', state);
+    window.location.href = naverAuthUrl;
+  };
 
   const renderProviderBadge = () => {
     const p = user.provider?.toUpperCase();
@@ -57,6 +74,57 @@ export default function MyPage() {
     );
   };
 
+  // 1. 로딩 중일 때 (Hydration 대응)
+  if (isLoggedIn === null) return null;
+
+  // 2. 로그인하지 않았을 때 (로그인 유도 화면)
+  if (isLoggedIn === false) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-8">
+        <Card variant="bento" className="max-w-md w-full p-12 text-center space-y-8">
+          <div className="space-y-2">
+            <div className="w-16 h-16 bg-blue-100 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 uppercase">Login Required</h2>
+            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              마이페이지를 이용하시려면 로그인이 필요합니다.<br/>소셜 계정으로 간편하게 시작하세요.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-4">
+            <Button 
+              variant="naver" 
+              className="w-full py-4 flex items-center justify-center gap-3 text-[11px]"
+              onClick={handleNaverLogin}
+            >
+              <span className="w-5 h-5 bg-white text-[#03C75A] rounded-md flex items-center justify-center font-black">N</span>
+              CONTINUE WITH NAVER
+            </Button>
+            <Button 
+              variant="kakao" 
+              className="w-full py-4 flex items-center justify-center gap-3 text-[11px]"
+              onClick={() => alert('카카오 로그인은 준비 중입니다.')}
+            >
+              <span className="w-5 h-5 bg-[#3C1E1E] text-[#FEE500] rounded-md flex items-center justify-center font-black">K</span>
+              CONTINUE WITH KAKAO
+            </Button>
+          </div>
+
+          <button 
+            onClick={() => router.push('/studio')}
+            className="text-[10px] font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-[0.2em]"
+          >
+            ← Back to Studio
+          </button>
+        </Card>
+      </div>
+    );
+  }
+
+  // 3. 로그인했을 때 (기존 마이페이지 내용)
   return (
     <div className="min-h-screen bg-slate-50/50 p-8 sm:p-20">
       <div className="max-w-4xl mx-auto space-y-8">
