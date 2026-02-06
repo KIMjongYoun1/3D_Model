@@ -53,7 +53,18 @@ NAVER_REDIRECT_URI=http://localhost:3000/api/auth/callback/naver
 npm install
 ```
 
-### 4. Python 가상환경 및 DB 마이그레이션
+### 4. Docker 컨테이너 및 데이터베이스 초기화
+```bash
+# 1. PostgreSQL 및 Redis 실행
+docker-compose up -d postgres redis
+
+# 2. 데이터베이스 및 사용자 생성 (필요 시)
+# - DB명: postgres (또는 virtual_tryon)
+# - 사용자: model_dev / 비밀번호: dev1234
+# (docker-compose.yml에 설정된 기본값을 따릅니다.)
+```
+
+### 5. Python 가상환경 및 DB 마이그레이션
 ```bash
 # 가상환경 생성 및 활성화 (macOS 기준)
 python3.12 -m venv venv
@@ -62,9 +73,12 @@ source venv/bin/activate
 # 의존성 설치
 pip install -r requirements.txt
 
-# DB 마이그레이션 (Alembic)
+# DB 마이그레이션 (Python - Alembic)
 cd backend-python
 alembic upgrade head
+
+# DB 마이그레이션 (Java - Flyway)
+# Java 백엔드 실행 시 자동으로 V1~V4 스크립트가 적용됩니다.
 ```
 
 ### 5. Java 백엔드 설정 (Lombok 미사용)
