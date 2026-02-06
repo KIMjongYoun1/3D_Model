@@ -4,7 +4,7 @@ Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화�
 
 ## 🌟 핵심 가치
 - **비정형 데이터의 구조화**: JSON, 로그, 문서(PDF/TXT/Excel) 등 복잡한 데이터를 AI가 분석하여 시각적 노드와 관계로 변환합니다.
-*   **지능형 3D 엔진**: 데이터 간의 상관관계를 GPU 가속 3D 캔버스에 실시간으로 렌더링합니다.
+- **지능형 3D 엔진**: 데이터 간의 상관관계를 GPU 가속 3D 캔버스에 실시간으로 렌더링합니다.
 - **하이브리드 AI 라우팅**: 클라우드 AI(Gemini)와 로컬 모델을 결합하여 비용 효율적이고 강력한 분석을 제공합니다.
 
 ---
@@ -60,5 +60,6 @@ Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화�
 
 ## 🔗 관련 문서
 - [빠른 시작 가이드](../QUICK_START.md)
-- [프론트엔드 디자인 가이드](./FRONTEND_DESIGN_SYSTEM.md)
+- [개발 가이드](./DEVELOPMENT_GUIDE.md)
+- [디자인 시스템](./FRONTEND_DESIGN_SYSTEM.md)
 - [소셜 로그인 가이드](./SOCIAL_AUTH_SETUP.md)

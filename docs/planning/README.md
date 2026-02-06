@@ -1,136 +1,64 @@
-# 🎨 Virtual Try-On 서비스 기획안 (초안)
+# 🎨 Quantum Studio 서비스 기획안
 
-> **버전**: v0.1 (초안)  
-> **작성일**: 2025.11.30  
-> **개발 규모**: 1인 ~ 3인  
-> **예상 월 유지비**: 약 30만원
+Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화하고 분석하는 차세대 시각화 플랫폼입니다.
 
 ---
 
 ## 📋 프로젝트 개요
 
-### 서비스명 (가칭)
-- **FitMe** / **TryOn3D** / **VirtualFit**
+### 서비스명
+- **Quantum Studio** (퀀텀 스튜디오)
 
 ### 핵심 가치
-> "옷을 사기 전에 내 모습으로 미리 입어본다"
+> "복잡한 데이터를 한눈에 이해하는 3D 지능형 캔버스"
 
 ### 주요 기능
-1. **의상 촬영 → 3D 모델링**: 옷 사진을 찍으면 AI가 분석하여 착용 이미지 생성
-2. **개인화 마네킹**: 사용자 얼굴이 반영된 3D 아바타에 옷 적용
-3. **결과물 저장/공유**: 착용 시뮬레이션 결과를 저장하고 SNS 공유
-
-### 타겟 사용자
-- 온라인 쇼핑 시 사이즈/핏 고민하는 소비자
-- 의류 쇼핑몰 운영자 (B2B 연동)
-- 패션 인플루언서
+1. **비정형 데이터 분석**: JSON, 로그, 문서 등을 AI가 분석하여 구조화된 노드로 변환
+2. **지능형 3D 매핑**: 데이터 간의 상관관계를 3D 공간에 실시간 렌더링
+3. **하이브리드 AI 엔진**: 클라우드와 로컬 모델을 결합한 최적의 분석 제공
 
 ---
 
 ## 📁 문서 구조
 
-### 📋 기획 문서
-| 파일명 | 설명 |
-|--------|------|
-| [ROADMAP.md](./ROADMAP.md) | 개발 로드맵 & 마일스톤 |
+### 📋 핵심 문서
+- [PROJECT_OVERVIEW.md](../PROJECT_OVERVIEW.md): 프로젝트 개요 및 아키텍처
+- [API_SPECIFICATION.md](../API_SPECIFICATION.md): API 및 주요 메소드 명세서
+- [UI_SPECIFICATION.md](../UI_SPECIFICATION.md): 프론트엔드 UI/UX 명세서
+- [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md): 핵심 개발 가이드 및 패턴
+- [FRONTEND_DESIGN_SYSTEM.md](../FRONTEND_DESIGN_SYSTEM.md): 디자인 시스템 및 컴포넌트 규격
+- [SOCIAL_AUTH_SETUP.md](../SOCIAL_AUTH_SETUP.md): 소셜 로그인 설정 가이드
 
-### 🏗️ 기술 문서
-| 파일명 | 설명 |
-|--------|------|
-| [ARCHITECTURE.md](../technical/ARCHITECTURE.md) | 기술 스택 & 시스템 아키텍처 |
-| [AI_MODELS.md](../technical/AI_MODELS.md) | AI 모델 선정 & 비교 |
-| [SECURITY.md](../technical/SECURITY.md) | Python/FastAPI 보안 가이드 |
-
-### 🛠️ 개발 가이드
-| 파일명 | 설명 |
-|--------|------|
-| [MCP_SETUP.md](../guides/MCP_SETUP.md) | Figma & Notion MCP 연결 설정 가이드 |
-| [WORKFLOW_DESIGN_TO_DOCS.md](../guides/WORKFLOW_DESIGN_TO_DOCS.md) | 디자인부터 개발 문서화 워크플로우 |
-| [CURSOR_GUIDE.md](../guides/CURSOR_GUIDE.md) | Cursor IDE 요금제 & 활용 가이드 |
-| [CURSOR_TOOLS_INTEGRATION.md](../guides/CURSOR_TOOLS_INTEGRATION.md) | Cursor 도구 연동 & 협업 가이드 |
-| [QUICK_START_MCP.md](../guides/QUICK_START_MCP.md) | MCP 빠른 시작 가이드 (5분) |
-
-### 🔧 도구
-| 파일명 | 설명 |
-|--------|------|
-| [TOOLS.md](../tools/TOOLS.md) | 사용 도구 & 협업 환경 |
-
-### 📊 설계 문서
-| 파일명 | 설명 |
-|--------|------|
-| [ERD.md](../design/ERD.md) | 데이터베이스 설계 |
+### 📊 설계 및 로드맵
+- [ROADMAP.md](./ROADMAP.md): 개발 로드맵 및 마일스톤
+- [ERD.md](../design/ERD.md): 데이터베이스 설계
 
 ---
 
-## 🔄 서비스 플로우 (Big Picture)
+## 🏗️ 서비스 아키텍처 (Big Picture)
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           사용자 플로우                                   │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  [1] 얼굴 등록       [2] 옷 사진 촬영      [3] AI 합성        [4] 결과물  │
-│  ┌─────────┐        ┌─────────┐         ┌─────────┐       ┌─────────┐   │
-│  │ 📸 얼굴 │  ──▶   │ 👗 옷   │   ──▶   │ 🤖 AI   │ ──▶   │ 🖼️ 착용 │   │
-│  │  사진   │        │  사진   │         │  처리   │       │  이미지 │   │
-│  └─────────┘        └─────────┘         └─────────┘       └─────────┘   │
-│       │                  │                  │                  │        │
-│       ▼                  ▼                  ▼                  ▼        │
-│  Face Mesh 생성   의상 세그멘테이션   Virtual Try-On     3D 렌더링      │
-│  + 3D 아바타 생성  + 텍스처 추출      모델 적용         + 공유/저장     │
-│                                                                          │
-└──────────────────────────────────────────────────────────────────────────┘
+```text
+[사용자 데이터] ──▶ [AI 분석 엔진 (Python)] ──▶ [3D 시각화 (Next.js)]
+      │                                              │
+      └──────▶ [인증/결제 (Java)] ◀──────────────────┘
 ```
 
 ---
 
-## 👥 팀 구성 시나리오
+## 📌 주요 결정 사항
 
-### 1인 개발 (Solo)
-- 풀스택 + AI 모델 연동
-- MVP 집중, 3~4개월 예상
-
-### 2인 개발
-- **개발자 A**: Backend + AI Pipeline
-- **개발자 B**: Frontend + 3D 렌더링
-
-### 3인 개발
-- **개발자 A**: Backend API + 인프라
-- **개발자 B**: Frontend + UX
-- **개발자 C**: AI/ML + 모델 최적화
-
----
-
-## 🚀 Quick Start
-
-### MCP 연결 (Figma & Notion)
-1. [QUICK_START_MCP.md](../guides/QUICK_START_MCP.md) - 5분 빠른 시작 가이드
-2. [MCP_SETUP.md](../guides/MCP_SETUP.md) - 상세 설정 가이드
-3. [WORKFLOW_DESIGN_TO_DOCS.md](../guides/WORKFLOW_DESIGN_TO_DOCS.md) - 디자인→개발→문서화 워크플로우
-
-### 프로젝트 개발
-1. [TOOLS.md](../tools/TOOLS.md)를 참고하여 필요한 도구 설치
-2. [ARCHITECTURE.md](../technical/ARCHITECTURE.md)에서 기술 스택 확인
-3. [ROADMAP.md](./ROADMAP.md)의 Phase 1부터 진행
-4. [ERD.md](../design/ERD.md)를 참고하여 DB 설계
-
----
-
-## 📌 주요 결정 사항 (TBD)
-
-- [ ] 서비스명 최종 결정
-- [ ] AI 모델 최종 선정 (IDM-VTON vs OOTDiffusion)
-- [ ] 클라우드 인프라 선정 (AWS vs GCP vs 국내)
-- [ ] 수익 모델 결정 (B2C 구독 vs B2B API)
+- **Framework**: Next.js 14 (Frontend), Spring Boot 3.2 (Java BE), FastAPI (Python BE)
+- **Database**: PostgreSQL (Main), Redis (Cache)
+- **AI**: Google Gemini Pro API 연동
+- **Theme**: Apple-Clean White Style
 
 ---
 
 ## 📞 문의 & 협업
 
-- 프로젝트 관리: Notion / GitHub Projects
+- 프로젝트 관리: GitHub Issues / Projects
 - 커뮤니케이션: Slack / Discord
 
 ---
 
-*이 문서는 초안이며, 개발 진행에 따라 지속적으로 업데이트됩니다.*
-
+*이 문서는 현재 개발 진행 상태를 반영하여 지속적으로 업데이트됩니다.*
