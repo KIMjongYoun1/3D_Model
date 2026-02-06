@@ -1,10 +1,6 @@
 package com.virtualtryon.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,112 +10,125 @@ import java.util.UUID;
 /**
  * User 엔티티 (사용자)
  * 
- * 역할:
- * - 사용자 정보 저장
- * - 인증/인가에 사용
- * - 비밀번호는 BCrypt로 해시화되어 저장
- * 
- * @Entity: JPA 엔티티로 인식
- * @Table: 테이블명 지정 (users)
+ * ⚠️ Lombok 제거 버전: Getter, Setter, Constructor 직접 구현
  */
 @Entity
 @Table(name = "users")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
     
-    /**
-     * Primary Key: UUID
-     * - 자동 생성 (데이터베이스에서)
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     
-    /**
-     * 이메일 (로그인 ID)
-     * - 유니크 제약조건
-     * - NOT NULL
-     */
     @Column(unique = true, nullable = false, length = 255)
     private String email;
     
-    /**
-     * 비밀번호 해시
-     * - BCrypt로 해시화된 비밀번호 저장
-     * - 평문 비밀번호는 절대 저장하지 않음
-     * - 소셜 로그인 사용자의 경우 NULL일 수 있음
-     */
     @Column(name = "password_hash", nullable = true, length = 255)
     private String passwordHash;
 
-    /**
-     * 소셜 로그인 제공자
-     * - LOCAL: 자체 로그인
-     * - NAVER: 네이버 로그인
-     * - KAKAO: 카카오 로그인
-     */
     @Column(length = 20)
-    @Builder.Default
     private String provider = "LOCAL";
 
-    /**
-     * 소셜 로그인 고유 식별자
-     */
     @Column(name = "provider_id", length = 255)
     private String providerId;
+
+    @Column(length = 20)
+    private String mobile;
     
-    /**
-     * 사용자 이름
-     */
     @Column(length = 100)
     private String name;
     
-    /**
-     * 프로필 이미지 URL
-     */
     @Column(name = "profile_image", length = 500)
     private String profileImage;
     
-    /**
-     * 구독 유형
-     * - free: 무료
-     * - basic: 기본
-     * - pro: 프로
-     * - unlimited: 무제한
-     */
     @Column(length = 20)
-    @Builder.Default
     private String subscription = "free";
     
-    /**
-     * 생성일시
-     * - 자동 설정 (데이터베이스에서)
-     */
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    /**
-     * 수정일시
-     * - 자동 업데이트
-     */
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    /**
-     * 삭제일시 (소프트 삭제)
-     * - NULL이면 활성 사용자
-     * - 값이 있으면 삭제된 사용자
-     */
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // 기본 생성자
+    public User() {}
+
+    // Builder 패턴 대신 사용할 전체 생성자
+    public User(String email, String name, String profileImage, String provider, String providerId, String mobile) {
+        this.email = email;
+        this.name = name;
+        this.profileImage = profileImage;
+        this.provider = provider;
+        this.providerId = providerId;
+        this.mobile = mobile;
+        this.subscription = "free";
+    }
+
+    // Getter & Setter
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getProvider() { return provider; }
+    public void setProvider(String provider) { this.provider = provider; }
+
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
+
+    public String getMobile() { return mobile; }
+    public void setMobile(String mobile) { this.mobile = mobile; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getProfileImage() { return profileImage; }
+    public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
+
+    public String getSubscription() { return subscription; }
+    public void setSubscription(String subscription) { this.subscription = subscription; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+
+    // Builder 패턴 시뮬레이션을 위한 정적 내부 클래스 (선택 사항이지만 기존 코드 호환을 위해 유지)
+    public static class UserBuilder {
+        private String email;
+        private String name;
+        private String profileImage;
+        private String provider;
+        private String providerId;
+        private String mobile;
+        private String subscription = "free";
+
+        public UserBuilder email(String email) { this.email = email; return this; }
+        public UserBuilder name(String name) { this.name = name; return this; }
+        public UserBuilder profileImage(String profileImage) { this.profileImage = profileImage; return this; }
+        public UserBuilder provider(String provider) { this.provider = provider; return this; }
+        public UserBuilder providerId(String providerId) { this.providerId = providerId; return this; }
+        public UserBuilder mobile(String mobile) { this.mobile = mobile; return this; }
+        public UserBuilder subscription(String subscription) { this.subscription = subscription; return this; }
+
+        public User build() {
+            User user = new User(email, name, profileImage, provider, providerId, mobile);
+            user.setSubscription(this.subscription);
+            return user;
+        }
+    }
+
+    public static UserBuilder builder() {
+        return new UserBuilder();
+    }
 }
-
-
-
-
-

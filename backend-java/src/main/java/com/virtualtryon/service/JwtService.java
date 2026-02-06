@@ -2,7 +2,6 @@ package com.virtualtryon.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,13 +41,6 @@ public class JwtService {
      */
     @Value("${jwt.expire-minutes:60}")
     private int expireMinutes;
-    
-    /**
-     * JWT 알고리즘
-     * - HS256: HMAC-SHA256
-     * - Python Backend와 동일
-     */
-    private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.HS256;
     
     /**
      * Secret Key 생성
@@ -92,7 +84,7 @@ public class JwtService {
                 .claims(claims)
                 .issuedAt(now)  // 발급 시간 (iat)
                 .expiration(expiryDate)  // 만료 시간 (exp)
-                .signWith(getSigningKey(), ALGORITHM)  // 서명
+                .signWith(getSigningKey())  // 서명 (알고리즘 자동 선택)
                 .compact();
     }
     
