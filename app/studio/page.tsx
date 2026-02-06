@@ -286,58 +286,57 @@ export default function QuantumStudioPage() {
 
       {/* AI 에이전트 입력창 */}
       <div className={`absolute top-0 right-0 h-full w-full sm:w-[500px] bg-white/95 backdrop-blur-3xl border-l border-slate-200 z-[60] shadow-[-20px_0_100px_rgba(0,0,0,0.05)] transition-all duration-500 transform ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex flex-col h-full p-10 text-slate-900">
-          <div className="flex justify-between items-center mb-10">
+        <div className="flex flex-col h-full text-slate-900">
+          {/* Header - Padding maintained for title */}
+          <div className="flex justify-between items-center p-10 pb-6">
             <h2 className="text-2xl font-black italic tracking-tighter">NEURAL INPUT</h2>
             <button onClick={() => setIsEditorOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors text-xl">✕</button>
           </div>
-          <div className="flex gap-2 mb-8 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-            {[{ id: 'auto', label: 'AUTO', icon: '✨' }, { id: 'diagram', label: 'DIAGRAM', icon: '🕸️' }, { id: 'settlement', label: 'TABLE/BAR', icon: '📊' }].map((mode) => (
-              <button key={mode.id} onClick={() => setRenderType(mode.id)} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black transition-all ${renderType === mode.id ? 'bg-white text-blue-600 shadow-md border border-slate-200' : 'text-slate-500 hover:bg-white/50'}`}><span>{mode.icon}</span>{mode.label}</button>
-            ))}
-          </div>
-          <div className="mb-8">
-            <div className={`p-6 border-2 border-dashed rounded-3xl text-center group transition-all cursor-pointer ${selectedFile ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-slate-50 hover:border-blue-400'}`} onClick={() => fileInputRef.current?.click()}>
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.txt,.xlsx,.xls,.csv" />
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform ${selectedFile ? 'bg-blue-600 scale-110' : 'bg-slate-200 group-hover:scale-110'}`}>{selectedFile ? <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>}</div>
-              {selectedFile ? <div className="space-y-1"><p className="text-sm font-black text-blue-600 truncate px-4">{selectedFile.name}</p><p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Ready to process</p></div> : <><p className="text-sm font-bold text-slate-700">Drop your data files here</p><p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">PDF, TXT, Excel, CSV supported</p></>}
+
+          <div className="flex-1 flex flex-col px-6 pb-10 space-y-6 overflow-y-auto custom-scrollbar">
+            {/* Render Mode Toggle */}
+            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              {[{ id: 'auto', label: 'AUTO', icon: '✨' }, { id: 'diagram', label: 'DIAGRAM', icon: '🕸️' }, { id: 'settlement', label: 'TABLE/BAR', icon: '📊' }].map((mode) => (
+                <button key={mode.id} onClick={() => setRenderType(mode.id)} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black transition-all ${renderType === mode.id ? 'bg-white text-blue-600 shadow-md border border-slate-200' : 'text-slate-500 hover:bg-white/50'}`}><span>{mode.icon}</span>{mode.label}</button>
+              ))}
             </div>
-            {selectedFile && (
-              <div className="mt-4 flex gap-2">
-                <Button 
-                  variant="primary"
-                  onClick={processFileUpload} 
-                  disabled={loading} 
-                  className="flex-1 py-4"
-                >
-                  {loading ? "ANALYZING..." : "START AI ANALYSIS"}
-                </Button>
-                <Button 
-                  variant="ghost"
-                  onClick={() => setSelectedFile(null)} 
-                  className="px-6 py-4"
-                >
-                  CANCEL
-                </Button>
+
+            {/* File Upload Area */}
+            <div className="space-y-4">
+              <div className={`p-8 border-2 border-dashed rounded-[2rem] text-center group transition-all cursor-pointer ${selectedFile ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-slate-50 hover:border-blue-400'}`} onClick={() => fileInputRef.current?.click()}>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.txt,.xlsx,.xls,.csv" />
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform ${selectedFile ? 'bg-blue-600 scale-110' : 'bg-slate-200 group-hover:scale-110'}`}>{selectedFile ? <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>}</div>
+                {selectedFile ? <div className="space-y-1"><p className="text-sm font-black text-blue-600 truncate px-4">{selectedFile.name}</p><p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Ready to process</p></div> : <><p className="text-sm font-bold text-slate-700">Drop your data files here</p><p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">PDF, TXT, Excel, CSV supported</p></>}
               </div>
-            )}
+              {selectedFile && (
+                <div className="flex gap-2">
+                  <Button variant="primary" onClick={processFileUpload} disabled={loading} className="flex-1 py-3 text-[11px]">{loading ? "ANALYZING..." : "START AI ANALYSIS"}</Button>
+                  <Button variant="ghost" onClick={() => setSelectedFile(null)} className="px-6 py-3 text-[11px]">CANCEL</Button>
+                </div>
+              )}
+            </div>
+
+            {/* Text Input Area - Optimized for Maximum Height */}
+            <div className="flex-[2] flex flex-col min-h-0 space-y-4">
+              <div className="relative flex items-center"><div className="flex-1 h-px bg-slate-100"></div><span className="px-4 text-[10px] text-slate-400 font-black uppercase tracking-widest">OR ENTER TEXT</span><div className="flex-1 h-px bg-slate-100"></div></div>
+              <Input 
+                type="textarea"
+                value={jsonInput} 
+                onChange={(e) => setJsonInput(e.target.value)} 
+                className="flex-1 !space-y-0"
+                placeholder="Paste your raw data or logic here..."
+              />
+            </div>
+
+            <Button 
+              variant="primary"
+              onClick={handleSubmit} 
+              disabled={loading} 
+              className="w-full py-4 text-[13px] bg-slate-900 hover:bg-black shadow-2xl shadow-black/10 flex-shrink-0"
+            >
+              {loading ? "PROCESSING..." : "EXECUTE 3D ENGINE"}
+            </Button>
           </div>
-          <div className="relative flex items-center mb-6"><div className="flex-1 h-px bg-slate-100"></div><span className="px-4 text-[10px] text-slate-400 font-black uppercase tracking-widest">OR ENTER TEXT</span><div className="flex-1 h-px bg-slate-100"></div></div>
-          <Input 
-            type="textarea"
-            value={jsonInput} 
-            onChange={(e) => setJsonInput(e.target.value)} 
-            className="flex-1"
-            placeholder="Paste your raw data or logic here..."
-          />
-          <Button 
-            variant="primary"
-            onClick={handleSubmit} 
-            disabled={loading} 
-            className="mt-8 w-full py-5 bg-slate-900 hover:bg-black shadow-2xl shadow-black/10"
-          >
-            {loading ? "PROCESSING..." : "EXECUTE 3D ENGINE"}
-          </Button>
         </div>
       </div>
     </div>

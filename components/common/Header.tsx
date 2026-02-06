@@ -13,7 +13,6 @@ const Header = () => {
 
   const navItems = [
     { name: 'Studio', href: '/studio' },
-    { name: '회원가입', href: '/register' },
     { name: '결제', href: '/payment' },
     { name: '마이페이지', href: '/mypage' },
   ];
@@ -115,7 +114,7 @@ const Header = () => {
             </Button>
           </div>
         ) : (
-          <>
+          <div className="flex items-center gap-2">
             <Button 
               variant="naver"
               onClick={handleNaverLogin}
@@ -125,12 +124,14 @@ const Header = () => {
               NAVER LOGIN
             </Button>
             <Button 
-              variant="secondary"
-              className="text-[10px] px-5 py-2"
+              variant="kakao"
+              onClick={() => alert('카카오 로그인은 준비 중입니다.')}
+              className="text-[10px] px-4 py-2 flex items-center gap-2"
             >
-              LOGIN
+              <span className="w-4 h-4 bg-[#3C1E1E] text-[#FEE500] rounded-sm flex items-center justify-center text-[10px] font-black">K</span>
+              KAKAO LOGIN
             </Button>
-          </>
+          </div>
         )}
       </div>
     </header>

@@ -13,7 +13,7 @@ config = context.config
 
 # 환경 변수에서 데이터베이스 URL 가져오기
 from app.core.config import settings
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option("sqlalchemy.url", settings.sqlalchemy_database_url)
 
 # 로깅 설정
 if config.config_file_name is not None:

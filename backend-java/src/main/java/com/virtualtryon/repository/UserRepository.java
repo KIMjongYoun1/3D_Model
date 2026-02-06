@@ -41,5 +41,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return 사용자 (Optional)
      */
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
+    /**
+     * Refresh Token으로 사용자 조회
+     */
+    Optional<User> findByRefreshToken(String refreshToken);
 }
 

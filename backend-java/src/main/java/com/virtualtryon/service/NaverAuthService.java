@@ -49,7 +49,8 @@ public class NaverAuthService {
 
     @jakarta.annotation.PostConstruct
     public void init() {
-        log.info("NaverAuthService initialized with Client ID: {}", clientId != null && !clientId.equals("your_naver_client_id") ? "VALID_KEY_LOADED" : "INVALID_OR_DEFAULT_KEY");
+        log.info("NaverAuthService initialized with Client ID: {}", (clientId != null && !clientId.isEmpty()) ? "LOADED" : "MISSING");
+        log.info("NaverAuthService initialized with Redirect URI: {}", redirectUri);
     }
 
     /**
@@ -57,12 +58,17 @@ public class NaverAuthService {
      */
     @Transactional
     public AuthService.LoginResult loginWithNaver(String code, String state) {
-        String accessToken = getAccessToken(code, state);
-        NaverProfile profile = getProfile(accessToken);
+        String naverAccessToken = getAccessToken(code, state);
+        NaverProfile profile = getProfile(naverAccessToken);
         User user = processUser(profile);
-        String token = jwtService.generateToken(user.getId());
         
-        return new AuthService.LoginResult(token, user);
+        String accessToken = jwtService.generateToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+        
+        return new AuthService.LoginResult(accessToken, refreshToken, user);
     }
 
     private String getAccessToken(String code, String state) {
@@ -118,6 +124,7 @@ public class NaverAuthService {
             user.setName(profile.getName());
             user.setProfileImage(profile.getProfileImage());
             user.setMobile(profile.getMobile());
+            user.setProvider("NAVER"); // 확실하게 보장
             return userRepository.save(user);
         }
 

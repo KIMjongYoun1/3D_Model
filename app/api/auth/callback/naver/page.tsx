@@ -27,13 +27,15 @@ export default function NaverCallbackPage() {
       // Java 백엔드에 인증 코드 전달
       axios.get(`http://localhost:8080/api/v1/auth/naver/callback?code=${code}&state=${state}`)
         .then(response => {
-          const { accessToken, userId, email, name } = response.data;
+          const { accessToken, refreshToken, userId, email, name, provider } = response.data;
           
           // JWT 토큰 및 사용자 정보 저장
           localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('refreshToken', refreshToken);
           localStorage.setItem('userId', userId);
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userName', name);
+          localStorage.setItem('userProvider', provider || 'NAVER');
           
           // 로그인 성공 후 스튜디오로 이동
           router.push('/studio');

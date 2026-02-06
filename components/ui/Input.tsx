@@ -28,7 +28,7 @@ export const Input = ({
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
   return (
-    <div className={`w-full space-y-2 ${className}`}>
+    <div className={`w-full flex flex-col space-y-2 ${className}`}>
       {label && (
         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
           {label}
@@ -43,7 +43,7 @@ export const Input = ({
           onChange={onChange as any}
           disabled={disabled}
           required={required}
-          className={`${baseStyles} ${errorStyles} ${disabledStyles} min-h-[120px] resize-none`}
+          className={`${baseStyles} ${errorStyles} ${disabledStyles} flex-1 min-h-[120px] resize-none`}
         />
       ) : (
         <input

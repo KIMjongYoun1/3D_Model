@@ -8,7 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,6 +27,12 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
     
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     /**
      * 비밀번호 인코더 (BCrypt)
      * 
@@ -67,7 +73,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()  // 인증 API는 허용
                 .requestMatchers("/health").permitAll()          // 헬스 체크 허용
                 .anyRequest().authenticated()                    // 나머지는 인증 필요
-            );
+            )
+            
+            // JWT 필터 추가
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }

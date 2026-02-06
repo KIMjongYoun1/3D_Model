@@ -55,6 +55,9 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "refresh_token", length = 255)
+    private String refreshToken;
+
     // 기본 생성자
     public User() {}
 
@@ -102,6 +105,9 @@ public class User {
 
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
 
     // Builder 패턴 시뮬레이션을 위한 정적 내부 클래스 (선택 사항이지만 기존 코드 호환을 위해 유지)
     public static class UserBuilder {

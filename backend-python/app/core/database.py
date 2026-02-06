@@ -29,7 +29,7 @@ from app.core.config import settings
 # - max_overflow=20: 최대 30개까지 연결 가능 (10 + 20)
 # - 사용 후 연결 반환 (재사용)
 engine = create_engine(
-    settings.database_url,  # PostgreSQL 연결 URL
+    settings.sqlalchemy_database_url,  # 파이썬용으로 변환된 URL 사용
     echo=True,               # 개발 환경에서 SQL 쿼리 로그 출력 (프로덕션에서는 False)
     pool_pre_ping=True,     # 연결 전 유효성 검사 (연결 끊김 방지)
     pool_size=10,           # 기본 연결 풀 크기 (동시에 유지할 연결 수)

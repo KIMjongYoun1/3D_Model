@@ -11,6 +11,7 @@ interface CardProps {
 }
 
 export const Card = ({
+  id,
   children,
   title,
   subtitle,
@@ -18,12 +19,12 @@ export const Card = ({
   onClick,
   variant = 'default',
 }: CardProps) => {
-  const baseStyles = 'transition-all duration-500 overflow-hidden';
+  const baseStyles = 'transition-all duration-500';
   
   const variantStyles = {
-    default: 'bg-white border border-slate-200 rounded-[2rem] shadow-xl shadow-slate-200/50',
-    bento: 'bg-white/80 backdrop-blur-2xl border border-slate-200 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:border-blue-200',
-    glass: 'bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[3rem] shadow-2xl'
+    default: 'bg-white border border-slate-200 rounded-[2.5rem] shadow-xl shadow-slate-200/50',
+    bento: 'bg-white/80 backdrop-blur-2xl border border-slate-200 rounded-[3rem] shadow-xl hover:shadow-2xl hover:border-blue-200',
+    glass: 'bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[3.5rem] shadow-2xl'
   };
 
   const interactiveStyles = onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : '';

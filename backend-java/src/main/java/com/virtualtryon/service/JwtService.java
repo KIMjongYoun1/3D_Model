@@ -41,6 +41,13 @@ public class JwtService {
      */
     @Value("${jwt.expire-minutes:60}")
     private int expireMinutes;
+
+    /**
+     * Refresh Token 만료 시간 (밀리초)
+     * - 기본값: 7일
+     */
+    @Value("${jwt.refresh-expire-days:7}")
+    private int refreshExpireDays;
     
     /**
      * Secret Key 생성
@@ -67,18 +74,33 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", userId.toString());  // subject: 사용자 ID
         
-        return createToken(claims);
+        return createToken(claims, expireMinutes * 60 * 1000L);
+    }
+
+    /**
+     * Refresh Token 생성
+     * 
+     * @param userId 사용자 ID
+     * @return Refresh Token 문자열
+     */
+    public String generateRefreshToken(UUID userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", userId.toString());
+        claims.put("type", "refresh");
+        
+        return createToken(claims, refreshExpireDays * 24 * 60 * 60 * 1000L);
     }
     
     /**
      * JWT 토큰 생성 (내부 메서드)
      * 
      * @param claims 클레임 (토큰에 포함할 데이터)
+     * @param expirationMillis 만료 시간 (밀리초)
      * @return JWT 토큰 문자열
      */
-    private String createToken(Map<String, Object> claims) {
+    private String createToken(Map<String, Object> claims, long expirationMillis) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + (expireMinutes * 60 * 1000));
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
         
         return Jwts.builder()
                 .claims(claims)

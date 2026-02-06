@@ -27,6 +27,20 @@ class Settings(BaseSettings):
     # 데이터베이스 및 인프라 (기본값 제공)
     # ===================
     database_url: str = "postgresql+psycopg://model_dev:dev1234@localhost:5432/postgres"
+    
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        """
+        SQLAlchemy용 데이터베이스 URL 반환
+        - Java용 jdbc: 형식이 들어오면 파이썬용으로 변환
+        """
+        url = self.database_url
+        if url.startswith("jdbc:postgresql://"):
+            url = url.replace("jdbc:postgresql://", "postgresql+psycopg://")
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://")
+        return url
+
     redis_url: str = "redis://localhost:6379/0"
     
     # 보안 및 AI 키 (선택사항으로 변경)

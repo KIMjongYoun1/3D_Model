@@ -35,7 +35,7 @@ public class AuthService {
     /**
      * 로그인
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResult login(String email, String password) {
         // 1. 사용자 조회
         User user = userRepository.findByEmail(Objects.requireNonNull(email, "email must not be null"))
@@ -53,25 +53,66 @@ public class AuthService {
         }
         
         // 4. JWT 토큰 생성
-        String token = jwtService.generateToken(user.getId());
+        String accessToken = jwtService.generateToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
         
-        return new LoginResult(token, user);
+        // 5. Refresh Token 저장
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+        
+        return new LoginResult(accessToken, refreshToken, user);
+    }
+    
+    /**
+     * 토큰 갱신
+     */
+    @Transactional
+    public LoginResult refresh(String refreshToken) {
+        // 1. 토큰 유효성 검사
+        if (!jwtService.validateToken(refreshToken)) {
+            throw new BadCredentialsException("유효하지 않은 Refresh Token입니다.");
+        }
+        
+        // 2. Refresh Token으로 사용자 조회 (DB에서 직접 조회하여 보안 강화)
+        User user = userRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BadCredentialsException("유효하지 않은 Refresh Token입니다."));
+        
+        // 3. 삭제된 사용자 체크
+        if (user.getDeletedAt() != null) {
+            throw new BadCredentialsException("사용자를 찾을 수 없습니다.");
+        }
+        
+        // 4. 새로운 토큰 생성
+        String newAccessToken = jwtService.generateToken(user.getId());
+        String newRefreshToken = jwtService.generateRefreshToken(user.getId());
+        
+        // 5. 새로운 Refresh Token 저장
+        user.setRefreshToken(newRefreshToken);
+        userRepository.save(user);
+        
+        return new LoginResult(newAccessToken, newRefreshToken, user);
     }
     
     /**
      * 로그인 결과 클래스
      */
     public static class LoginResult {
-        private final String token;
+        private final String accessToken;
+        private final String refreshToken;
         private final User user;
         
-        public LoginResult(String token, User user) {
-            this.token = token;
+        public LoginResult(String accessToken, String refreshToken, User user) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
             this.user = user;
         }
         
-        public String getToken() {
-            return token;
+        public String getAccessToken() {
+            return accessToken;
+        }
+        
+        public String getRefreshToken() {
+            return refreshToken;
         }
         
         public User getUser() {

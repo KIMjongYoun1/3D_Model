@@ -39,11 +39,13 @@ public class AuthController {
             AuthService.LoginResult result = naverAuthService.loginWithNaver(code, state);
             
             LoginResponse response = LoginResponse.builder()
-                    .accessToken(result.getToken())
+                    .accessToken(result.getAccessToken())
+                    .refreshToken(result.getRefreshToken())
                     .tokenType("Bearer")
                     .userId(result.getUser().getId())
                     .email(result.getUser().getEmail())
                     .name(result.getUser().getName())
+                    .provider(result.getUser().getProvider())
                     .build();
             
             return ResponseEntity.ok(response);
@@ -58,11 +60,34 @@ public class AuthController {
             AuthService.LoginResult result = authService.login(request.getEmail(), request.getPassword());
             
             LoginResponse response = LoginResponse.builder()
-                    .accessToken(result.getToken())
+                    .accessToken(result.getAccessToken())
+                    .refreshToken(result.getRefreshToken())
                     .tokenType("Bearer")
                     .userId(result.getUser().getId())
                     .email(result.getUser().getEmail())
                     .name(result.getUser().getName())
+                    .provider(result.getUser().getProvider())
+                    .build();
+            
+            return ResponseEntity.ok(response);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@RequestParam String refreshToken) {
+        try {
+            AuthService.LoginResult result = authService.refresh(refreshToken);
+            
+            LoginResponse response = LoginResponse.builder()
+                    .accessToken(result.getAccessToken())
+                    .refreshToken(result.getRefreshToken())
+                    .tokenType("Bearer")
+                    .userId(result.getUser().getId())
+                    .email(result.getUser().getEmail())
+                    .name(result.getUser().getName())
+                    .provider(result.getUser().getProvider())
                     .build();
             
             return ResponseEntity.ok(response);

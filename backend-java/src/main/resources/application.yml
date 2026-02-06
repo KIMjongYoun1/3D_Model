@@ -54,15 +54,15 @@ server:
 # ============================================
 # ⚠️ 중요: Python Backend와 같은 JWT_SECRET 사용해야 함
 jwt:
-  secret: ${JWT_SECRET:your-super-secret-key-change-this-in-production}  # Python과 동일한 값 사용
+  secret: ${JWT_SECRET}  # Python과 동일한 값 사용
   algorithm: HS256  # JWT 알고리즘
-  expire-minutes: ${JWT_EXPIRE_MINUTES:60}  # 토큰 만료 시간 (분)
+  expire-minutes: ${JWT_EXPIRE_MINUTES}  # 토큰 만료 시간 (분)
 
 # ============================================
 # 결제 시뮬레이션 설정
 # ============================================
 payment:
-  success-rate: ${PAYMENT_SUCCESS_RATE:0.9}  # 결제 성공 확률 (0.0 ~ 1.0, 기본값 0.9 = 90%)
+  success-rate: ${PAYMENT_SUCCESS_RATE}  # 결제 성공 확률 (0.0 ~ 1.0, 기본값 0.9 = 90%)
 
 # ============================================
 # 소셜 로그인 설정 (Naver)
