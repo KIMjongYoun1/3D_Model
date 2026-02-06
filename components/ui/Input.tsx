@@ -1,11 +1,11 @@
 import React from 'react';
 
 interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number';
+  type?: 'text' | 'email' | 'password' | 'number' | 'textarea';
   label?: string;
   placeholder?: string;
   value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   error?: string;
   disabled?: boolean;
   required?: boolean;
@@ -23,32 +23,43 @@ export const Input = ({
   required = false,
   className = '',
 }: InputProps) => {
-  const baseStyles = 'w-full px-4 py-3 rounded-lg border border-gray-200 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors';
-  const errorStyles = error ? 'border-red-500 focus:ring-red-500' : '';
-  const disabledStyles = disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white';
+  const baseStyles = 'w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all duration-300 shadow-inner';
+  const errorStyles = error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : '';
+  const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full space-y-2 ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-blue-600 ml-1">*</span>}
         </label>
       )}
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        required={required}
-        className={`${baseStyles} ${errorStyles} ${disabledStyles}`}
-      />
+      
+      {type === 'textarea' ? (
+        <textarea
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange as any}
+          disabled={disabled}
+          required={required}
+          className={`${baseStyles} ${errorStyles} ${disabledStyles} min-h-[120px] resize-none`}
+        />
+      ) : (
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange as any}
+          disabled={disabled}
+          required={required}
+          className={`${baseStyles} ${errorStyles} ${disabledStyles}`}
+        />
+      )}
+      
       {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+        <p className="px-1 text-[10px] font-bold text-red-500 uppercase tracking-tight">{error}</p>
       )}
     </div>
   );
 };
-
-

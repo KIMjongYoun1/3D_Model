@@ -32,5 +32,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return 존재 여부
      */
     boolean existsByEmail(String email);
+
+    /**
+     * 소셜 로그인 정보로 사용자 조회
+     * 
+     * @param provider 제공자 (NAVER, KAKAO 등)
+     * @param providerId 제공자 고유 ID
+     * @return 사용자 (Optional)
+     */
+    Optional<User> findByProviderAndProviderId(String provider, String providerId);
 }
 

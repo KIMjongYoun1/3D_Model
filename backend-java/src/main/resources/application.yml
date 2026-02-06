@@ -65,6 +65,14 @@ payment:
   success-rate: ${PAYMENT_SUCCESS_RATE:0.9}  # 결제 성공 확률 (0.0 ~ 1.0, 기본값 0.9 = 90%)
 
 # ============================================
+# 소셜 로그인 설정 (Naver)
+# ============================================
+naver:
+  client-id: ${NAVER_CLIENT_ID}
+  client-secret: ${NAVER_CLIENT_SECRET}
+  redirect-uri: ${NAVER_REDIRECT_URI}
+
+# ============================================
 # 로깅 설정
 # ============================================
 logging:

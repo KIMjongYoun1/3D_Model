@@ -50,9 +50,26 @@ public class User {
      * 비밀번호 해시
      * - BCrypt로 해시화된 비밀번호 저장
      * - 평문 비밀번호는 절대 저장하지 않음
+     * - 소셜 로그인 사용자의 경우 NULL일 수 있음
      */
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", nullable = true, length = 255)
     private String passwordHash;
+
+    /**
+     * 소셜 로그인 제공자
+     * - LOCAL: 자체 로그인
+     * - NAVER: 네이버 로그인
+     * - KAKAO: 카카오 로그인
+     */
+    @Column(length = 20)
+    @Builder.Default
+    private String provider = "LOCAL";
+
+    /**
+     * 소셜 로그인 고유 식별자
+     */
+    @Column(name = "provider_id", length = 255)
+    private String providerId;
     
     /**
      * 사용자 이름

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, Suspense, useState, useEffect, useMemo } from "react";
+import React, { useRef, Suspense, useState, useEffect, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Grid, Text, Float, Line, Billboard, MeshWobbleMaterial } from "@react-three/drei";
 import * as THREE from "three";
@@ -78,7 +78,7 @@ export function DraggableWindow({ node, onClose, zIndex, onFocus, isTop }: any) 
         transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
         zIndex 
       }}
-      className={`absolute top-0 left-0 w-[400px] bg-white/90 backdrop-blur-3xl border-2 ${isTop ? 'border-blue-500 shadow-[0_30px_80px_rgba(37,99,235,0.2)]' : 'border-slate-200 shadow-2xl'} rounded-[2.5rem] overflow-hidden pointer-events-auto transition-all duration-400 transform-gpu`}
+      className={`absolute top-0 left-0 w-[400px] bg-white/90 backdrop-blur-3xl border-2 ${isTop ? 'border-blue-500 shadow-[0_30px_80px_rgba(37,99,235,0.2)]' : 'border-slate-200 shadow-2xl'} rounded-[2.5rem] select-none overflow-hidden pointer-events-auto transition-all duration-400 transform-gpu`}
     >
       <div onMouseDown={handleMouseDown} className={`p-6 flex justify-between items-center cursor-move border-b ${isTop ? 'bg-blue-50/50 border-blue-100' : 'bg-slate-50/50 border-slate-100'}`}>
         <div className="flex items-center gap-3">
@@ -305,7 +305,7 @@ function CameraSetup({ nodeCount }: { nodeCount: number }) {
   return null;
 }
 
-export default function QuantumUniverse({ data, openNodes, topNodeId, showPopups, autoFocus, onNodeSelect, onNodeClose, onNodeFocus, centerOffset = [0, 0, 0] }: any) {
+export default function QuantumCanvas({ data, openNodes, topNodeId, showPopups, autoFocus, onNodeSelect, onNodeClose, onNodeFocus, centerOffset = [0, 0, 0] }: any) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   if (!data) return null;
   const nodeCount = data.nodes?.length || 0;

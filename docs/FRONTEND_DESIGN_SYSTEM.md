@@ -1,25 +1,25 @@
-# 🎨 QuantumViz Frontend Design System & Workspace Architecture
+# 🎨 QuantumViz Frontend Design System & Studio Architecture
 
-이 문서는 QuantumViz의 프론트엔드 디자인 철학, 워크스페이스 구조 및 각 디자인 안건(Option)별 구현 상세를 기록합니다.
+이 문서는 QuantumViz의 프론트엔드 디자인 철학, 스튜디오 구조 및 각 디자인 안건(Option)별 구현 상세를 기록합니다.
 
 ---
 
-## 🏗️ Core Architecture: Spatial Bottom-Bar Workspace
-QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하며, 3D 유니버스를 전체 배경으로 하고 데이터 도식을 하단에 배치한 개방형 구조를 채택하고 있습니다.
+## 🏗️ Core Architecture: Spatial Studio Workspace
+QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하며, 3D 캔버스를 전체 배경으로 하고 데이터 도식을 하단에 배치한 개방형 구조를 채택하고 있습니다.
 
 ### 핵심 레이어 구조 (Layered Architecture)
-1. **Layer 1 (Background)**: 3D Quantum Universe (White Theme / Spatial Offset)
+1. **Layer 1 (Background)**: 3D Quantum Canvas (White Theme / Spatial Offset)
 2. **Layer 2 (Floating Bottom)**: Horizontal Schematic Bar (Bento Scroll Style)
 3. **Layer 3 (Global)**: Interaction & Popup Layer (Z-Index Workspace)
 4. **Layer 4 (Right Drawer)**: Neural Input Panel (Swipe-in Interface)
 
 ---
 
-## 💎 디자인 안건 1: 전면 개방형 스페이셜 워크스페이스 (Full-Spatial Workspace) - [완성형 적용]
+## 💎 디자인 안건 1: 전면 개방형 스페이셜 스튜디오 (Full-Spatial Studio) - [완성형 적용]
 
 ### 1. 개념 및 특징
 *   **해결 과제**: 화면 분할로 인한 공간 협소함 및 데이터 가둠 현상 해결.
-*   **디자인 철학**: "무한한 캔버스와 유연한 레이어". 3D 유니버스를 전체 배경으로 하고, UI 요소들은 투명한 유리판(Overlay)처럼 배치.
+*   **디자인 철학**: "무한한 캔버스와 유연한 레이어". 3D 캔버스를 전체 배경으로 하고, UI 요소들은 투명한 유리판(Overlay)처럼 배치.
 *   **주요 기술**: 
     *   **Full-Window Rendering**: 3D 캔버스가 브라우저 전체 영역을 사용하여 공간감 극대화.
     *   **Bottom-Sheet Overlay**: 하단 다이어그램 바를 3D 시점에 영향을 주지 않는 순수 오버레이 방식으로 구현.
@@ -29,12 +29,12 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
 
 ### 2. 구현 코드 상세 (Implementation)
 
-#### A. 메인 레이아웃 구조 (`app/universe/page.tsx`)
+#### A. 메인 레이아웃 구조 (`app/studio/page.tsx`)
 ```tsx
 <div className="flex-1 flex w-full overflow-hidden relative bg-white">
-  {/* [Layer 1] 3D 유니버스: 전체 배경 고정 */}
+  {/* [Layer 1] 3D 캔버스: 전체 배경 고정 */}
   <div className="absolute inset-0 z-10">
-    <QuantumUniverse centerOffset={[0, 0, 0]} {...props} />
+    <QuantumCanvas centerOffset={[0, 0, 0]} {...props} />
   </div>
 
   {/* [Layer 2] 하단 다이어그램 바: 3D 뷰 위에 떠 있는 바텀 시트 */}
@@ -51,7 +51,7 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
 </div>
 ```
 
-#### B. 3D 울트라 볼드 스타일 (`components/QuantumUniverse.tsx`)
+#### B. 3D 울트라 볼드 스타일 (`components/QuantumCanvas.tsx`)
 ```tsx
 <Text 
   fontSize={1.4} 

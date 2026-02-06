@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
-import QuantumUniverse, { DraggableWindow } from "@/components/QuantumUniverse";
+import QuantumCanvas, { DraggableWindow } from "@/components/QuantumCanvas";
 import ERDDiagram from "@/components/ERDDiagram";
+import Onboarding from "@/components/studio/Onboarding";
 
-export default function QuantumUniversePage() {
+export default function QuantumStudioPage() {
   const [vizData, setVizData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +20,22 @@ export default function QuantumUniversePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [renderType, setRenderType] = useState<string>("auto");
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // 온보딩 상태 관리 (비회원일 때 항상 표시)
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // localStorage에서 로그인 정보 확인
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      setIsLoggedIn(true);
+      setShowOnboarding(false);
+    } else {
+      setIsLoggedIn(false);
+      setShowOnboarding(true);
+    }
+  }, []);
   
   const [jsonInput, setJsonInput] = useState<string>(JSON.stringify({
     "project_name": "Quantum System",
@@ -145,36 +162,37 @@ export default function QuantumUniversePage() {
   }, []);
 
   return (
-    <main className="relative h-screen w-screen bg-[#f8f9fa] overflow-hidden flex flex-col font-sans text-slate-900">
-      <header className="h-16 flex justify-between items-center z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl px-8">
-        <div className="flex items-center gap-4">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="font-black text-lg italic text-white">Q</span>
-          </div>
-          <h1 className="text-xl font-black italic tracking-tighter text-slate-900">QUANTUM<span className="text-blue-600">VIZ</span></h1>
+    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
+      {/* Studio 전용 컨트롤 바 (서브 헤더) */}
+      <div className="h-12 bg-white/50 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-end gap-4 z-40">
+        <div className="flex items-center gap-3 bg-slate-100/50 px-3 py-1 rounded-full border border-slate-200">
+          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Auto Focus</span>
+          <button 
+            onClick={() => setAutoFocus(!autoFocus)} 
+            className={`relative w-9 h-5 rounded-full transition-colors duration-300 focus:outline-none ${autoFocus ? 'bg-blue-600' : 'bg-slate-300'}`}
+          >
+            <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 transform ${autoFocus ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Auto Focus</span>
-            <button onClick={() => setAutoFocus(!autoFocus)} className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${autoFocus ? 'bg-blue-600' : 'bg-slate-300'}`}>
-              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${autoFocus ? 'left-6' : 'left-1'}`} />
-            </button>
-          </div>
-          <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Diagram</span>
-            <button onClick={() => setShowDiagram(!showDiagram)} className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${showDiagram ? 'bg-blue-600' : 'bg-slate-300'}`}>
-              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${showDiagram ? 'left-6' : 'left-1'}`} />
-            </button>
-          </div>
-          <button onClick={() => setIsEditorOpen(true)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-full transition-all shadow-lg shadow-blue-600/20">+ NEW MAPPING</button>
+        <div className="flex items-center gap-3 bg-slate-100/50 px-3 py-1 rounded-full border border-slate-200">
+          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Diagram</span>
+          <button 
+            onClick={() => setShowDiagram(!showDiagram)} 
+            className={`relative w-9 h-5 rounded-full transition-colors duration-300 focus:outline-none ${showDiagram ? 'bg-blue-600' : 'bg-slate-300'}`}
+          >
+            <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 transform ${showDiagram ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
         </div>
-      </header>
+        <button onClick={() => setIsEditorOpen(true)} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black rounded-full transition-all shadow-md shadow-blue-600/10">
+          + NEW MAPPING
+        </button>
+      </div>
 
       <div className="flex-1 flex w-full overflow-hidden relative bg-white">
-        {/* [Layer 1] 3D 유니버스 - 전체 배경 (고정 레이아웃) */}
+        {/* [Layer 1] 3D 캔버스 - 전체 화면 고정 */}
         <div className="absolute inset-0 z-10">
           {vizData ? (
-            <QuantumUniverse 
+            <QuantumCanvas 
               data={vizData.mapping_data} 
               openNodes={openNodes} 
               topNodeId={topNodeId} 
@@ -183,41 +201,39 @@ export default function QuantumUniversePage() {
               onNodeSelect={handleNodeSelect} 
               onNodeClose={handleNodeClose} 
               onNodeFocus={setTopNodeId}
-              // 유저 요청: 인풋 없는 레이아웃 조정 제거 (항상 중앙 고정)
               centerOffset={[0, 0, 0]} 
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center font-mono text-slate-200 tracking-[1em] animate-pulse">INITIALIZING_CANVAS...</div>
+            <div className="w-full h-full flex items-center justify-center font-mono text-slate-200 tracking-[1em] animate-pulse text-sm">INITIALIZING_CANVAS...</div>
           )}
         </div>
 
-        {/* [Layer 2] 하단 다이어그램 바 - 순수 오버레이 팝업 방식 (Bottom Sheet) */}
+        {/* [Layer 2] 하단 다이어그램 바 - 높이 최적화 버전 (Bottom Sheet) */}
         <div 
-          className={`absolute bottom-0 left-0 right-0 h-[480px] z-30 transition-all duration-1000 transform-gpu
+          className={`absolute bottom-0 left-0 right-0 h-[380px] z-30 transition-all duration-1000 transform-gpu [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]
             ${showDiagram && vizData ? 'translate-y-0' : 'translate-y-full'}`}
-          style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
         >
-          <div className="w-full h-full bg-white/40 backdrop-blur-3xl border-t border-slate-200/50 shadow-[0_-40px_100px_rgba(0,0,0,0.05)] relative flex flex-col rounded-t-[3.5rem]">
-            <div className="h-14 flex-shrink-0 flex items-center justify-center cursor-pointer" onClick={() => setShowDiagram(false)}>
-              <div className="w-20 h-1.5 bg-slate-300/60 rounded-full" />
+          <div className="w-full h-full bg-white/40 backdrop-blur-3xl border-t border-slate-200/50 shadow-[0_-40px:100px_rgba(0,0,0,0.05)] relative flex flex-col rounded-t-[3.5rem]">
+            <div className="h-8 flex-shrink-0 flex items-center justify-center cursor-pointer" onClick={() => setShowDiagram(false)}>
+              <div className="w-16 h-1 bg-slate-300/60 rounded-full" />
             </div>
-            <div className="h-16 border-b border-slate-100/50 flex items-center px-12 justify-between bg-white/10">
+            <div className="h-12 border-b border-slate-100/50 flex items-center px-12 justify-between bg-white/10">
               <div className="flex items-center gap-6 flex-1">
-                <div className="relative w-80">
-                  <input type="text" placeholder="Search nodes or values..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/50 backdrop-blur-md border border-slate-200/50 rounded-2xl px-5 py-2.5 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 transition-all" />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</div>
+                <div className="relative w-64">
+                  <input type="text" placeholder="Search nodes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/50 backdrop-blur-md border border-slate-200/50 rounded-xl px-4 py-1.5 text-[11px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">🔍</div>
                 </div>
-                <div className="flex gap-2 overflow-x-auto max-w-[600px] no-scrollbar py-2">
+                <div className="flex gap-2 overflow-x-auto max-w-[500px] no-scrollbar py-1">
                   {searchTerm && filteredNodes.map((node: any) => (
-                    <button key={node.id} onClick={() => handleNodeSelect(node)} className="flex-shrink-0 px-4 py-2 bg-blue-600 text-white text-[10px] font-black rounded-xl shadow-lg shadow-blue-600/20 transition-all">{node.label}</button>
+                    <button key={node.id} onClick={() => handleNodeSelect(node)} className="flex-shrink-0 px-3 py-1 bg-blue-600 text-white text-[9px] font-black rounded-lg shadow-lg shadow-blue-600/20 transition-all">{node.label}</button>
                   ))}
                 </div>
               </div>
               <div className="flex justify-end items-center gap-4">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{filteredNodes.length} NODES_SYNCED</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{filteredNodes.length} NODES_SYNCED</span>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar pt-12 pb-20">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 pb-10">
               {vizData && <ERDDiagram data={{...vizData.mapping_data, nodes: filteredNodes}} openNodes={openNodes} topNodeId={topNodeId} onNodeClick={handleDiagramNodeSelect} showDiagram={showDiagram} />}
             </div>
           </div>
@@ -231,7 +247,13 @@ export default function QuantumUniversePage() {
         </div>
       </div>
 
-      <div className={`absolute top-0 right-0 h-full w-full sm:w-[550px] bg-white/95 backdrop-blur-3xl border-l border-slate-200 z-50 shadow-[-20px_0_100px_rgba(0,0,0,0.05)] transition-all duration-500 transform ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      {/* 온보딩 가이드 레이어 */}
+      {showOnboarding && (
+        <Onboarding onComplete={() => setShowOnboarding(false)} />
+      )}
+
+      {/* AI 에이전트 입력창 */}
+      <div className={`absolute top-0 right-0 h-full w-full sm:w-[500px] bg-white/95 backdrop-blur-3xl border-l border-slate-200 z-[60] shadow-[-20px_0_100px_rgba(0,0,0,0.05)] transition-all duration-500 transform ${isEditorOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex flex-col h-full p-10 text-slate-900">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-2xl font-black italic tracking-tighter">NEURAL INPUT</h2>
@@ -255,6 +277,6 @@ export default function QuantumUniversePage() {
           <button onClick={handleSubmit} disabled={loading} className="mt-8 w-full py-5 bg-slate-900 hover:bg-black text-white font-black rounded-2xl transition-all shadow-2xl shadow-black/10">{loading ? "PROCESSING..." : "EXECUTE 3D ENGINE"}</button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

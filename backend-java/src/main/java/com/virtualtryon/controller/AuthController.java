@@ -28,7 +28,39 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     
     private final AuthService authService;
+    private final com.virtualtryon.service.NaverAuthService naverAuthService;
     
+    /**
+     * 네이버 소셜 로그인
+     * 
+     * GET /api/v1/auth/naver/callback
+     * 
+     * @param code 네이버에서 전달받은 인증 코드
+     * @param state 상태 값
+     * @return 로그인 응답 (JWT 토큰 포함)
+     */
+    @GetMapping("/naver/callback")
+    public ResponseEntity<LoginResponse> naverLogin(@RequestParam String code, @RequestParam String state) {
+        try {
+            // 네이버 로그인 처리
+            AuthService.LoginResult result = naverAuthService.loginWithNaver(code, state);
+            
+            // 응답 생성
+            LoginResponse response = LoginResponse.builder()
+                    .accessToken(result.getToken())
+                    .tokenType("Bearer")
+                    .userId(result.getUser().getId())
+                    .email(result.getUser().getEmail())
+                    .name(result.getUser().getName())
+                    .build();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+    }
+
     /**
      * 로그인
      * 

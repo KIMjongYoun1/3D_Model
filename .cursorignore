@@ -1,0 +1,10 @@
+node_modules/
+.next/
+venv/
+backend-python/venv/
+backend-java/target/
+build/
+dist/
+.cache/
+*.log
+.DS_Store

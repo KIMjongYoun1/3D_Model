@@ -6,6 +6,7 @@ interface CardProps {
   subtitle?: string;
   className?: string;
   onClick?: () => void;
+  variant?: 'default' | 'bento' | 'glass';
 }
 
 export const Card = ({
@@ -14,26 +15,32 @@ export const Card = ({
   subtitle,
   className = '',
   onClick,
+  variant = 'default',
 }: CardProps) => {
-  const baseStyles = 'bg-white rounded-lg shadow-md p-6 transition-shadow';
-  const interactiveStyles = onClick ? 'cursor-pointer hover:shadow-lg' : '';
+  const baseStyles = 'transition-all duration-500 overflow-hidden';
+  
+  const variantStyles = {
+    default: 'bg-white border border-slate-200 rounded-[2rem] shadow-xl shadow-slate-200/50',
+    bento: 'bg-white/80 backdrop-blur-2xl border border-slate-200 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:border-blue-200',
+    glass: 'bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[3rem] shadow-2xl'
+  };
+
+  const interactiveStyles = onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : '';
 
   return (
     <div
-      className={`${baseStyles} ${interactiveStyles} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${interactiveStyles} ${className}`}
       onClick={onClick}
     >
-      {title && (
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-          )}
+      {(title || subtitle) && (
+        <div className="px-8 pt-8 pb-4">
+          {title && <h3 className="text-lg font-black text-slate-900 tracking-tighter italic uppercase">{title}</h3>}
+          {subtitle && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">{subtitle}</p>}
         </div>
       )}
-      {children}
+      <div className={title || subtitle ? 'px-8 pb-8' : ''}>
+        {children}
+      </div>
     </div>
   );
 };
-
-
