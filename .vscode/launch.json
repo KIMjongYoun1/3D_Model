@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "VirtualTryOnApplication (Java Backend)",
+      "request": "launch",
+      "mainClass": "com.virtualtryon.VirtualTryOnApplication",
+      "projectName": "backend-java",
+      "cwd": "${workspaceFolder}/backend-java",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

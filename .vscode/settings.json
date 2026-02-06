@@ -1,0 +1,48 @@
+{
+  // Database Client 2 설정 (추천)
+  "database-client.connections": [
+    {
+      "name": "Virtual Try-On PostgreSQL",
+      "type": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "database": "virtual_tryon",
+      "username": "postgres",
+      "password": "postgres",
+      "connectionTimeout": 30
+    }
+  ],
+  
+  // SQLTools 설정
+  "sqltools.connections": [
+    {
+      "name": "Virtual Try-On DB",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5432,
+      "database": "virtual_tryon",
+      "username": "postgres",
+      "password": "postgres"
+    }
+],
+  "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.import.maven.enabled": true,
+    "java.project.importHint": "backend-java",
+    "java.project.sourcePaths": [
+        "backend-java/src/main/java"
+    ],
+  "java.project.resourcePaths": [
+    "backend-java/src/main/resources"
+  ],
+  "java.import.projectConfiguration.enabled": true,
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m",
+  "java.configuration.maven.userSettings": "",
+  "maven.executable.path": "",
+  "maven.terminal.useJavaHome": true
+}
+
+
+
+
+

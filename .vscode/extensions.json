@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "cweijan.vscode-database-client2",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "ckolkman.vscode-postgres",
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-spring-boot-dashboard",
+    "vmware.vscode-spring-boot",
+    "vscjava.vscode-maven"
+  ]
+}
+
+
+

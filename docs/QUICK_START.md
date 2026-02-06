@@ -124,6 +124,19 @@ cd backend-java
 
 ---
 
+## 프론트엔드 개발 가이드 (Frontend Tips)
+
+### 1. React 임포트 정책
+Next.js 14+ 버전에서는 JSX 사용 시 `import React from 'react'`가 필수사항은 아니지만, **IDE(Cursor/VSCode)의 린트 에러 방지 및 타입 정의 안정성**을 위해 모든 `.tsx` 파일 상단에 명시적으로 추가하는 것을 권장합니다.
+- 에러 예시: `React refers to a UMD global, but the current file is a module.`
+- 해결 방법: 파일 상단에 `import React from 'react';` 추가
+
+### 2. TypeScript 경로 별칭 (Path Alias)
+상대 경로(`../../`) 대신 `@/`로 시작하는 절대 경로를 사용하세요.
+- 예: `import Header from '@/components/common/Header';`
+
+---
+
 ## 주요 문제 해결 (Troubleshooting)
 
 - **Java Classpath 에러**: `Clean Java Language Server Workspace` 명령을 실행하세요.

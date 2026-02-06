@@ -36,7 +36,6 @@ yarn-error.log*
 
 # TypeScript
 *.tsbuildinfo
-next-env.d.ts
 
 # Python
 __pycache__/
@@ -63,7 +62,6 @@ target/
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
