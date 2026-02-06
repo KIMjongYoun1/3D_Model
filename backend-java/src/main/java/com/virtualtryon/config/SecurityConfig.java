@@ -9,6 +9,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+
 /**
  * Spring Security 설정
  * 
@@ -48,8 +54,8 @@ public class SecurityConfig {
             // CSRF 비활성화 (JWT 사용 시 불필요)
             .csrf(csrf -> csrf.disable())
             
-            // CORS 설정
-            .cors(cors -> cors.configure(http))
+            // CORS 설정 (Bean으로 등록된 corsConfigurationSource 사용)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
             // 세션 비활성화 (JWT 사용)
             .sessionManagement(session -> 
@@ -64,6 +70,23 @@ public class SecurityConfig {
             );
         
         return http.build();
+    }
+
+    /**
+     * CORS 설정 소스
+     * - 프론트엔드(localhost:3000)의 접근을 허용
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
 

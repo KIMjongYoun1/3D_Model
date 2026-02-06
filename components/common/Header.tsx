@@ -1,11 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   const navItems = [
     { name: 'Studio', href: '/studio' },
@@ -13,6 +16,46 @@ const Header = () => {
     { name: '결제', href: '/payment' },
     { name: '마이페이지', href: '/mypage' },
   ];
+
+  const checkLoginStatus = useCallback(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const name = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
+    
+    if (token) {
+      setIsLoggedIn(true);
+      setUserName(name);
+    } else {
+      setIsLoggedIn(false);
+      setUserName(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkLoginStatus();
+    
+    // 컴포넌트 마운트 시 한 번 더 강제 체크 (Next.js Hydration 대응)
+    const timer = setTimeout(checkLoginStatus, 100);
+    
+    window.addEventListener('storage', checkLoginStatus);
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      clearTimeout(timer);
+    };
+  }, [checkLoginStatus, pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    setIsLoggedIn(false);
+    setUserName(null);
+    
+    // 로그아웃 이벤트 발생 (다른 컴포넌트들에게 알림)
+    window.dispatchEvent(new Event('storage'));
+    
+    router.push('/studio');
+  };
 
   const handleNaverLogin = () => {
     const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
@@ -56,16 +99,33 @@ const Header = () => {
       </nav>
 
       <div className="flex items-center gap-4">
-        <button 
-          onClick={handleNaverLogin}
-          className="flex items-center gap-2 px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-green-900/10"
-        >
-          <span className="w-4 h-4 bg-white text-[#03C75A] rounded-sm flex items-center justify-center text-[10px] font-black">N</span>
-          NAVER LOGIN
-        </button>
-        <button className="px-5 py-2 bg-slate-900 hover:bg-black text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-black/10">
-          LOGIN
-        </button>
+        {isLoggedIn ? (
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Logged in as</span>
+              <span className="text-[12px] font-bold text-slate-900">{userName}</span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black rounded-full transition-all border border-slate-200"
+            >
+              LOGOUT
+            </button>
+          </div>
+        ) : (
+          <>
+            <button 
+              onClick={handleNaverLogin}
+              className="flex items-center gap-2 px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-green-900/10"
+            >
+              <span className="w-4 h-4 bg-white text-[#03C75A] rounded-sm flex items-center justify-center text-[10px] font-black">N</span>
+              NAVER LOGIN
+            </button>
+            <button className="px-5 py-2 bg-slate-900 hover:bg-black text-white text-[10px] font-black rounded-full transition-all shadow-lg shadow-black/10">
+              LOGIN
+            </button>
+          </>
+        )}
       </div>
     </header>
   );

@@ -25,17 +25,25 @@ export default function QuantumStudioPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    // localStorage에서 로그인 정보 확인
+  const checkLoginStatus = useCallback(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       setIsLoggedIn(true);
       setShowOnboarding(false);
     } else {
+      setIsLoggedIn(true); // 임시로 true로 설정되어 있던 것을 false로 수정
       setIsLoggedIn(false);
       setShowOnboarding(true);
     }
   }, []);
+
+  useEffect(() => {
+    checkLoginStatus();
+    
+    // 다른 탭에서의 로그인/로그아웃 동기화
+    window.addEventListener('storage', checkLoginStatus);
+    return () => window.removeEventListener('storage', checkLoginStatus);
+  }, [checkLoginStatus]);
   
   const [jsonInput, setJsonInput] = useState<string>(JSON.stringify({
     "project_name": "Quantum System",
@@ -65,6 +73,16 @@ export default function QuantumStudioPage() {
   }, [vizData, searchTerm]);
 
   const fetchLatestVisualization = async () => {
+    // 비회원이면 데이터를 불러오지 않고 상태 초기화
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) {
+      setVizData(null);
+      setOpenNodes([]);
+      setTopNodeId(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:8000/api/v1/mapping");
@@ -159,7 +177,7 @@ export default function QuantumStudioPage() {
 
   useEffect(() => {
     fetchLatestVisualization();
-  }, []);
+  }, [isLoggedIn]); // 로그인 상태가 변경될 때마다 다시 확인
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">

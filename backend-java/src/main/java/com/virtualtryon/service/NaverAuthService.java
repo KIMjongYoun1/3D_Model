@@ -47,6 +47,11 @@ public class NaverAuthService {
         this.jwtService = jwtService;
     }
 
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        log.info("NaverAuthService initialized with Client ID: {}", clientId != null && !clientId.equals("your_naver_client_id") ? "VALID_KEY_LOADED" : "INVALID_OR_DEFAULT_KEY");
+    }
+
     /**
      * 네이버 로그인 처리
      */
@@ -78,8 +83,9 @@ public class NaverAuthService {
         if (response.getStatusCode() == HttpStatus.OK && body != null && body.getAccessToken() != null) {
             return body.getAccessToken();
         } else {
-            log.error("네이버 Access Token 획득 실패: {}", response.getStatusCode());
-            throw new RuntimeException("네이버 Access Token 획득 실패");
+            String errorMsg = (body != null) ? body.getError() + ": " + body.getErrorDescription() : "Empty body";
+            log.error("네이버 Access Token 획득 실패. Status: {}, Error: {}", response.getStatusCode(), errorMsg);
+            throw new RuntimeException("네이버 Access Token 획득 실패: " + errorMsg);
         }
     }
 
@@ -146,6 +152,10 @@ public class NaverAuthService {
         private String tokenType;
         @JsonProperty("expires_in")
         private String expiresIn;
+        @JsonProperty("error")
+        private String error;
+        @JsonProperty("error_description")
+        private String errorDescription;
 
         public String getAccessToken() { return accessToken; }
         public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
@@ -155,6 +165,10 @@ public class NaverAuthService {
         public void setTokenType(String tokenType) { this.tokenType = tokenType; }
         public String getExpiresIn() { return expiresIn; }
         public void setExpiresIn(String expiresIn) { this.expiresIn = expiresIn; }
+        public String getError() { return error; }
+        public void setError(String error) { this.error = error; }
+        public String getErrorDescription() { return errorDescription; }
+        public void setErrorDescription(String errorDescription) { this.errorDescription = errorDescription; }
     }
 
     public static class NaverProfileResponse {

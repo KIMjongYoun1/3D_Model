@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
 export default function NaverCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestSent = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const storedState = localStorage.getItem('naver_auth_state');
 
-    if (code && state) {
+    if (code && state && !requestSent.current) {
       // CSRF 검증
       if (state !== storedState) {
         console.error('Invalid state');
         router.push('/studio?error=invalid_state');
         return;
       }
+
+      requestSent.current = true;
 
       // Java 백엔드에 인증 코드 전달
       axios.get(`http://localhost:8080/api/v1/auth/naver/callback?code=${code}&state=${state}`)
