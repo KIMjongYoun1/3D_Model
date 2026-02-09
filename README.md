@@ -13,9 +13,10 @@
 ---
 
 ## 🏗 아키텍처 요약
-- **Frontend**: Next.js 14, Three.js (R3F)
-- **Backend (Auth/Pay)**: Java 21, Spring Boot
-- **Backend (AI/Mapping)**: Python 3.12, FastAPI
+- **Frontend (Studio)**: `frontend-studio` (Next.js 14, Port 3000) - 서비스용 3D 캔버스
+- **Frontend (Admin)**: `frontend-admin` (Next.js 14, Port 3001) - 관리자용 지식 베이스 관리
+- **Backend (Auth/Pay)**: Java 21, Spring Boot (Port 8080)
+- **Backend (AI/Mapping)**: Python 3.12, FastAPI (Port 8000)
 - **Database**: PostgreSQL, Redis
 
 ---
@@ -73,9 +74,13 @@ cd backend-python && alembic upgrade head
 
 ## 🚀 개발 서버 실행
 
-### 1. Frontend (Next.js)
+### 1. Frontend
 ```bash
-npm run dev  # http://localhost:3000
+# 서비스용 (Studio)
+cd frontend-studio && npm run dev  # http://localhost:3000
+
+# 관리자용 (Admin)
+cd frontend-admin && npm run dev   # http://localhost:3001
 ```
 
 ### 2. Backend Python (FastAPI)

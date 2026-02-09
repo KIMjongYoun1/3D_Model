@@ -1,0 +1,14 @@
+package com.virtualtryon.core.repository;
+
+import com.virtualtryon.core.entity.Knowledge;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface KnowledgeRepository extends JpaRepository<Knowledge, UUID> {
+    List<Knowledge> findByCategoryAndIsActiveTrueOrderByUpdatedAtDesc(String category);
+    List<Knowledge> findByIsActiveTrueOrderByUpdatedAtDesc();
+}

@@ -2,6 +2,32 @@
 
 이 문서는 QuantumViz의 프론트엔드 디자인 철학, 스튜디오 구조 및 각 디자인 안건(Option)별 구현 상세를 기록합니다.
 
+> **최종 업데이트**: 2026-02-09 — 멀티 프론트엔드 구조(`frontend-studio`, `frontend-admin`) 반영
+
+---
+
+## 📁 프론트엔드 모듈 구조
+
+프로젝트 리팩토링을 통해 단일 프론트엔드에서 **2개의 독립 프론트엔드 모듈**로 분리되었습니다.
+
+| 모듈 | 경로 | 포트 | 역할 |
+| :--- | :--- | :--- | :--- |
+| **Studio** | `frontend-studio/` | 3000 | 사용자향 3D 시각화 스튜디오 |
+| **Admin** | `frontend-admin/` | 3001 | 관리자 대시보드 (지식 베이스 관리) |
+
+### 공통 기술 스택
+- Next.js 14.2.0 (App Router)
+- React 18.3.0
+- Tailwind CSS
+- TypeScript
+
+### Studio 전용 의존성
+- @react-three/fiber 8.16.0 (3D 렌더링)
+- @react-three/drei 9.105.0 (3D 유틸리티)
+- Three.js 0.160.0
+- Zustand 4.5.0 (상태 관리)
+- @tanstack/react-query 5.28.0
+
 ---
 
 ## 🏗️ Core Architecture: Spatial Studio Workspace
@@ -29,7 +55,7 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
 
 ### 2. 구현 코드 상세 (Implementation)
 
-#### A. 메인 레이아웃 구조 (`app/studio/page.tsx`)
+#### A. 메인 레이아웃 구조 (`frontend-studio/app/studio/page.tsx`)
 ```tsx
 <div className="flex-1 flex w-full overflow-hidden relative bg-white">
   {/* [Layer 1] 3D 캔버스: 전체 배경 고정 */}
@@ -38,9 +64,9 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
   </div>
 
   {/* [Layer 2] 하단 다이어그램 바: 3D 뷰 위에 떠 있는 바텀 시트 */}
-  <div className="absolute bottom-0 left-0 right-0 h-[480px] z-30 transition-all">
+  <div className="absolute bottom-0 left-0 right-0 h-[380px] z-30 transition-all">
     <div className="w-full h-full bg-white/40 backdrop-blur-3xl rounded-t-[3.5rem]">
-      {/* 검색 및 4열 그리드 다이어그램 */}
+      {/* 검색 및 ERD 다이어그램 */}
     </div>
   </div>
 
@@ -51,7 +77,7 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
 </div>
 ```
 
-#### B. 3D 울트라 볼드 스타일 (`components/QuantumCanvas.tsx`)
+#### B. 3D 울트라 볼드 스타일 (`frontend-studio/components/QuantumCanvas.tsx`)
 ```tsx
 <Text 
   fontSize={1.4} 
@@ -62,6 +88,45 @@ QuantumViz는 2026년형 **공간 컴퓨팅(Spatial Computing)** UI를 지향하
 >
   {node.label}
 </Text>
+```
+
+#### C. 2D/3D 모드 전환
+스튜디오 서브 헤더에서 `vizMode` 토글을 통해 2D(ERDDiagram) / 3D(QuantumCanvas) 뷰를 실시간 전환할 수 있습니다.
+
+---
+
+## 📂 컴포넌트 파일 구조
+
+### frontend-studio/components/
+```
+components/
+├── common/
+│   ├── Footer.tsx          # 공통 푸터
+│   └── Header.tsx          # 공통 헤더 (인증 상태 반영)
+├── shared/
+│   └── DraggableWindow.tsx # GPU 가속 드래그 팝업
+├── studio/
+│   └── Onboarding.tsx      # 비회원 온보딩 가이드
+├── ui/                     # 디자인 시스템 컴포넌트
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   ├── Input.tsx
+│   └── Modal.tsx
+├── ERDDiagram.tsx          # 2D 관계도 다이어그램
+└── QuantumCanvas.tsx       # 3D 시각화 캔버스 (Three.js)
+```
+
+### frontend-admin/components/
+```
+components/
+├── common/
+│   ├── Footer.tsx
+│   └── Header.tsx
+└── ui/
+    ├── Button.tsx
+    ├── Card.tsx
+    ├── Input.tsx
+    └── Modal.tsx
 ```
 
 ---

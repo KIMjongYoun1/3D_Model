@@ -4,6 +4,8 @@ Revision ID: 002
 Revises: 001
 Create Date: 2026-01-24
 
+NOTE: DB 분리(2026-02-09)로 인해 users.id FK 제거.
+      user_id는 plain UUID 컬럼으로 유지 (application 레벨 참조).
 """
 from alembic import op
 import sqlalchemy as sa
@@ -11,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '002'
-down_revision = '001' # 001번(유저 테이블) 다음에 실행됨
+down_revision = '001'
 branch_labels = None
 depends_on = None
 
@@ -29,7 +31,7 @@ def upgrade() -> None:
         sa.Column('is_default', sa.Boolean(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+        # FK 제거: user_id는 quantum_service DB의 users 테이블 참조 (application 레벨)
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_avatars_user_id'), 'avatars', ['user_id'], unique=False)
@@ -46,7 +48,7 @@ def upgrade() -> None:
         sa.Column('features', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+        # FK 제거: user_id는 quantum_service DB의 users 테이블 참조 (application 레벨)
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_garments_category'), 'garments', ['category'], unique=False)
@@ -62,9 +64,10 @@ def upgrade() -> None:
         sa.Column('result_image_url', sa.String(length=500), nullable=False),
         sa.Column('ai_metadata', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+        # FK: avatar_id, garment_id는 같은 quantum_ai DB 내 테이블 참조
         sa.ForeignKeyConstraint(['avatar_id'], ['avatars.id'], ),
         sa.ForeignKeyConstraint(['garment_id'], ['garments.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+        # FK 제거: user_id는 quantum_service DB의 users 테이블 참조 (application 레벨)
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_tryon_results_user_id'), 'tryon_results', ['user_id'], unique=False)
@@ -73,4 +76,3 @@ def downgrade() -> None:
     op.drop_table('tryon_results')
     op.drop_table('garments')
     op.drop_table('avatars')
-

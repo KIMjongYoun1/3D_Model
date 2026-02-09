@@ -25,6 +25,7 @@ Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화�
 - [PROJECT_OVERVIEW.md](../PROJECT_OVERVIEW.md): 프로젝트 개요 및 아키텍처
 - [API_SPECIFICATION.md](../API_SPECIFICATION.md): API 및 주요 메소드 명세서
 - [UI_SPECIFICATION.md](../UI_SPECIFICATION.md): 프론트엔드 UI/UX 명세서
+- [AI_AGENT_ROUTING.md](../AI_AGENT_ROUTING.md): 지능형 에이전트 라우팅 설계서
 - [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md): 핵심 개발 가이드 및 패턴
 - [FRONTEND_DESIGN_SYSTEM.md](../FRONTEND_DESIGN_SYSTEM.md): 디자인 시스템 및 컴포넌트 규격
 - [SOCIAL_AUTH_SETUP.md](../SOCIAL_AUTH_SETUP.md): 소셜 로그인 설정 가이드
