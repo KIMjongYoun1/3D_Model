@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { name: "지식 관리", href: "/knowledge", icon: "📚" },
+  { name: "약관 관리", href: "/terms", icon: "📋" },
   { name: "AI 어시스턴트", href: "/ai", icon: "🤖" },
 ];
 

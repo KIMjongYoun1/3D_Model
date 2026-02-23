@@ -1,6 +1,7 @@
 package com.virtualtryon.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.virtualtryon.core.dto.TermsSummaryDto;
 import com.virtualtryon.core.entity.User;
 import com.virtualtryon.core.repository.UserRepository;
 import com.virtualtryon.core.service.JwtService;
@@ -14,6 +15,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,6 +31,7 @@ public class NaverAuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final TermsService termsService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${naver.client-id}")
@@ -43,9 +46,10 @@ public class NaverAuthService {
     private static final String NAVER_TOKEN_URL = "https://nid.naver.com/oauth2.0/token";
     private static final String NAVER_PROFILE_URL = "https://openapi.naver.com/v1/nid/me";
 
-    public NaverAuthService(UserRepository userRepository, JwtService jwtService) {
+    public NaverAuthService(UserRepository userRepository, JwtService jwtService, TermsService termsService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.termsService = termsService;
     }
 
     @jakarta.annotation.PostConstruct
@@ -55,21 +59,90 @@ public class NaverAuthService {
     }
 
     /**
-     * 네이버 로그인 처리
+     * 네이버 로그인 처리.
+     * - 약관 동의 완료된 경우: JWT 발급
+     * - 약관 미동의 시: agreementToken + terms 반환 (동의 페이지로 이동)
      */
     @Transactional
-    public AuthService.LoginResult loginWithNaver(String code, String state) {
+    public NaverAuthResult loginWithNaver(String code, String state) {
         String naverAccessToken = getAccessToken(code, state);
         NaverProfile profile = getProfile(naverAccessToken);
         User user = processUser(profile);
-        
+
+        if (termsService.hasUserAgreedToAllRequired(user)) {
+            String accessToken = jwtService.generateToken(user.getId());
+            String refreshToken = jwtService.generateRefreshToken(user.getId());
+            user.setRefreshToken(refreshToken);
+            userRepository.save(user);
+            return NaverAuthResult.success(accessToken, refreshToken, user);
+        }
+
+        String agreementToken = jwtService.generateAgreementToken(user.getId());
+        List<TermsSummaryDto> terms = termsService.getRequiredTermsSummary();
+        return NaverAuthResult.needsAgreement(agreementToken, terms, user.getEmail(), user.getName());
+    }
+
+    /** 약관 동의 완료 후 JWT 발급 */
+    @Transactional
+    public AuthService.LoginResult completeTermsAgreement(String agreementToken, List<java.util.UUID> agreedTermIds, String ipAddress, String userAgent) {
+        if (!jwtService.validateToken(agreementToken) || !"terms_agreement".equals(jwtService.extractTokenType(agreementToken))) {
+            throw new RuntimeException("유효하지 않거나 만료된 동의 토큰입니다.");
+        }
+        java.util.UUID userId = Objects.requireNonNull(jwtService.extractUserId(agreementToken), "userId must not be null from token");
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        termsService.saveAgreements(user, agreedTermIds, ipAddress, userAgent);
+
         String accessToken = jwtService.generateToken(user.getId());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
-        
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-        
+
         return new AuthService.LoginResult(accessToken, refreshToken, user);
+    }
+
+    /** 네이버 인증 결과 (성공 또는 약관 동의 필요) */
+    public static class NaverAuthResult {
+        private final boolean success;
+        private final String accessToken;
+        private final String refreshToken;
+        private final User user;
+        private final String agreementToken;
+        private final List<TermsSummaryDto> terms;
+        private final String email;
+        private final String name;
+
+        private NaverAuthResult(boolean success, String accessToken, String refreshToken, User user,
+                                String agreementToken, List<TermsSummaryDto> terms, String email, String name) {
+            this.success = success;
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
+            this.user = user;
+            this.agreementToken = agreementToken;
+            this.terms = terms;
+            this.email = email;
+            this.name = name;
+        }
+
+        public static NaverAuthResult success(String accessToken, String refreshToken, User user) {
+            Objects.requireNonNull(user, "user must not be null");
+            return new NaverAuthResult(true, accessToken, refreshToken, user, null, null,
+                    user.getEmail() != null ? user.getEmail() : "",
+                    user.getName() != null ? user.getName() : "");
+        }
+
+        public static NaverAuthResult needsAgreement(String agreementToken, List<TermsSummaryDto> terms, String email, String name) {
+            return new NaverAuthResult(false, null, null, null, agreementToken, terms, email, name);
+        }
+
+        public boolean isSuccess() { return success; }
+        public String getAccessToken() { return accessToken; }
+        public String getRefreshToken() { return refreshToken; }
+        public User getUser() { return user; }
+        public String getAgreementToken() { return agreementToken; }
+        public List<TermsSummaryDto> getTerms() { return terms; }
+        public String getEmail() { return email; }
+        public String getName() { return name; }
     }
 
     private String getAccessToken(String code, String state) {
@@ -118,8 +191,12 @@ public class NaverAuthService {
     }
 
     private User processUser(NaverProfile profile) {
-        Optional<User> existingByProvider = userRepository.findByProviderAndProviderId("NAVER", profile.getId());
-        
+        Objects.requireNonNull(profile, "profile must not be null");
+        String profileId = Objects.requireNonNull(profile.getId(), "profile.id must not be null");
+        String profileEmail = Objects.requireNonNull(profile.getEmail(), "profile.email must not be null");
+
+        Optional<User> existingByProvider = userRepository.findByProviderAndProviderId("NAVER", profileId);
+
         if (existingByProvider.isPresent()) {
             User user = existingByProvider.orElseThrow();
             user.setName(profile.getName());
@@ -129,23 +206,23 @@ public class NaverAuthService {
             return userRepository.save(user);
         }
 
-        Optional<User> existingByEmail = userRepository.findByEmail(profile.getEmail());
+        Optional<User> existingByEmail = userRepository.findByEmail(profileEmail);
         
         if (existingByEmail.isPresent()) {
             User user = existingByEmail.orElseThrow();
             user.setProvider("NAVER");
-            user.setProviderId(profile.getId());
+            user.setProviderId(profileId);
             user.setProfileImage(profile.getProfileImage());
             user.setMobile(profile.getMobile());
             return userRepository.save(user);
         }
 
         User newUser = new User(
-            profile.getEmail(),
-            profile.getName(),
+            profileEmail,
+            profile.getName() != null ? profile.getName() : "",
             profile.getProfileImage(),
             "NAVER",
-            profile.getId(),
+            profileId,
             profile.getMobile()
         );
         return userRepository.save(newUser);

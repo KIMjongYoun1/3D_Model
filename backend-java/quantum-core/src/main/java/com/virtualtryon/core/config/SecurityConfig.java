@@ -75,6 +75,7 @@ public class SecurityConfig {
             // 인증 필요 경로 설정
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()  // 인증 API는 허용
+                .requestMatchers("/api/v1/terms/**").permitAll()  // 약관 조회는 공개
                 .requestMatchers("/health").permitAll()          // 헬스 체크 허용
                 .anyRequest().authenticated()                    // 나머지는 인증 필요
             )

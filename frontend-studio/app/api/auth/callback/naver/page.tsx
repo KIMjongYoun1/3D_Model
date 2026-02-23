@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import { authApi } from '@/lib/authApi';
 
 export default function NaverCallbackPage() {
   const router = useRouter();
@@ -15,7 +15,6 @@ export default function NaverCallbackPage() {
     const storedState = localStorage.getItem('naver_auth_state');
 
     if (code && state && !requestSent.current) {
-      // CSRF 검증
       if (state !== storedState) {
         console.error('Invalid state');
         router.push('/studio?error=invalid_state');
@@ -24,20 +23,16 @@ export default function NaverCallbackPage() {
 
       requestSent.current = true;
 
-      // Java 백엔드에 인증 코드 전달
-      axios.get(`http://localhost:8080/api/v1/auth/naver/callback?code=${code}&state=${state}`)
+      authApi.get(`/api/v1/auth/naver/callback?code=${code}&state=${state}`)
         .then(response => {
-          const { accessToken, refreshToken, userId, email, name, provider } = response.data;
-          
-          // JWT 토큰 및 사용자 정보 저장
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          localStorage.setItem('userId', userId);
-          localStorage.setItem('userEmail', email);
-          localStorage.setItem('userName', name);
-          localStorage.setItem('userProvider', provider || 'NAVER');
-          
-          // 로그인 성공 후 스튜디오로 이동
+          const { needsAgreement, agreementToken, name } = response.data;
+
+          if (needsAgreement && agreementToken) {
+            sessionStorage.setItem('terms_agree_user_name', name || '');
+            router.push(`/auth/agree?token=${encodeURIComponent(agreementToken)}`);
+            return;
+          }
+
           router.push('/studio');
         })
         .catch(error => {

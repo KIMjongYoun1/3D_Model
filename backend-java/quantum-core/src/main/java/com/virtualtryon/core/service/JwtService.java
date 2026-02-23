@@ -248,6 +248,17 @@ public class JwtService {
     }
     
     /**
+     * 약관 동의 완료용 단기 토큰 생성 (5분)
+     * type=terms_agreement, sub=userId
+     */
+    public String generateAgreementToken(UUID userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", userId.toString());
+        claims.put("type", "terms_agreement");
+        return createToken(claims, 5 * 60 * 1000L);  // 5분
+    }
+
+    /**
      * 커스텀 클레임 검증
      * 
      * ⭐ 검증 패턴:

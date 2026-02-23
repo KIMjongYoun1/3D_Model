@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * JWT 인증 필터
  * 
- * 모든 요청을 가로채서 헤더의 Authorization: Bearer <token>을 검증합니다.
+ * Authorization: Bearer 또는 access_token 쿠키(HttpOnly)에서 토큰을 읽어 검증합니다.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -36,16 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+
+        String jwt = null;
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
+        if (jwt == null) {
+            jwt = AuthCookieHelper.getCookieValue(request, AuthCookieHelper.ACCESS_TOKEN);
+        }
         
-        final String authHeader = request.getHeader("Authorization");
-        
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (jwt == null || jwt.isEmpty()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
-        
         try {
             if (jwtService.validateToken(jwt)) {
                 UUID userId = jwtService.extractUserId(jwt);

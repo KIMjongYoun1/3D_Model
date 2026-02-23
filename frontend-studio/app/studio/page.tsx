@@ -43,9 +43,9 @@ export default function QuantumStudioPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const checkLoginStatus = useCallback(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
+  const checkLoginStatus = useCallback(async () => {
+    const user = await import('@/lib/authApi').then(m => m.checkAuth());
+    if (user) {
       setIsLoggedIn(true);
       setShowOnboarding(false);
     } else {
@@ -56,8 +56,6 @@ export default function QuantumStudioPage() {
 
   useEffect(() => {
     checkLoginStatus();
-    
-    // 다른 탭에서의 로그인/로그아웃 동기화
     window.addEventListener('storage', checkLoginStatus);
     return () => window.removeEventListener('storage', checkLoginStatus);
   }, [checkLoginStatus]);
@@ -90,9 +88,8 @@ export default function QuantumStudioPage() {
   }, [vizData, searchTerm]);
 
   const fetchLatestVisualization = async () => {
-    // 비회원이면 데이터를 불러오지 않고 상태 초기화
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    if (!token) {
+    const user = await import('@/lib/authApi').then(m => m.checkAuth());
+    if (!user) {
       setVizData(null);
       setOpenNodes([]);
       setTopNodeId(null);

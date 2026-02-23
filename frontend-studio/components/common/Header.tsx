@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { checkAuth, logout } from '@/lib/authApi';
 
 const Header = () => {
   const pathname = usePathname();
@@ -17,13 +18,11 @@ const Header = () => {
     { name: '마이페이지', href: '/mypage', protected: true },
   ];
 
-  const checkLoginStatus = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const name = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
-    
-    if (token) {
+  const checkLoginStatus = useCallback(async () => {
+    const user = await checkAuth();
+    if (user) {
       setIsLoggedIn(true);
-      setUserName(name);
+      setUserName(user.name);
     } else {
       setIsLoggedIn(false);
       setUserName(null);
@@ -32,28 +31,15 @@ const Header = () => {
 
   useEffect(() => {
     checkLoginStatus();
-    
-    // 컴포넌트 마운트 시 한 번 더 강제 체크 (Next.js Hydration 대응)
-    const timer = setTimeout(checkLoginStatus, 100);
-    
     window.addEventListener('storage', checkLoginStatus);
-    return () => {
-      window.removeEventListener('storage', checkLoginStatus);
-      clearTimeout(timer);
-    };
+    return () => window.removeEventListener('storage', checkLoginStatus);
   }, [checkLoginStatus, pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
+  const handleLogout = async () => {
+    await logout();
     setIsLoggedIn(false);
     setUserName(null);
-    
-    // 로그아웃 이벤트 발생 (다른 컴포넌트들에게 알림)
     window.dispatchEvent(new Event('storage'));
-    
     router.push('/studio');
   };
 

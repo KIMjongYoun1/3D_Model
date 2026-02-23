@@ -4,38 +4,21 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { checkAuth, AuthUser } from "@/lib/authApi";
 
 export default function MyPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null: loading, true/false: status
-  const [user, setUser] = useState({
-    name: '',
-    email: '',
-    provider: 'LOCAL',
-    subscription: 'Free',
-    joinDate: ''
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setIsLoggedIn(false);
-      return;
-    }
-    
-    setIsLoggedIn(true);
-    // 로컬 스토리지에서 기본 정보 로드
-    const name = localStorage.getItem('userName') || '사용자';
-    const email = localStorage.getItem('userEmail') || '이메일 정보 없음';
-    const provider = localStorage.getItem('userProvider') || 'LOCAL';
-    
-    setUser({
-      name,
-      email,
-      provider,
-      subscription: 'Free Plan',
-      joinDate: new Date().toLocaleDateString()
+    checkAuth().then(u => {
+      if (u) {
+        setIsLoggedIn(true);
+        setUser(u);
+      } else {
+        setIsLoggedIn(false);
+      }
     });
   }, []);
 
@@ -49,7 +32,7 @@ export default function MyPage() {
   };
 
   const renderProviderBadge = () => {
-    const p = user.provider?.toUpperCase();
+    const p = user?.provider?.toUpperCase() || 'LOCAL';
     if (p === 'NAVER') {
       return (
         <div className="flex items-center gap-2 px-4 py-2 bg-[#03C75A] text-white text-[10px] font-black rounded-xl shadow-lg shadow-green-900/10 border border-white/20">
@@ -149,7 +132,7 @@ export default function MyPage() {
                 </div>
                 <div className="space-y-1">
                   <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">User <span className="text-blue-600">Account</span></h2>
-                  <p className="text-slate-400 font-bold text-sm tracking-tight">{user.email}</p>
+                  <p className="text-slate-400 font-bold text-sm tracking-tight">{user?.email || ''}</p>
                 </div>
               </div>
 
@@ -157,7 +140,7 @@ export default function MyPage() {
                 <div className="space-y-2">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Name</span>
                   <div className="px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold text-slate-700 shadow-inner">
-                    {user.name || '사용자'}
+                    {user?.name || '사용자'}
                   </div>
                 </div>
                 <div className="space-y-2">

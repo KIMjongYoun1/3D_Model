@@ -17,16 +17,18 @@ public class UserResponse {
     private String profileImage;
     private String subscription;
     private LocalDateTime createdAt;
+    private String provider;
 
     public UserResponse() {}
 
-    public UserResponse(UUID id, String email, String name, String profileImage, String subscription, LocalDateTime createdAt) {
+    public UserResponse(UUID id, String email, String name, String profileImage, String subscription, LocalDateTime createdAt, String provider) {
         this.id = id;
         this.email = email;
         this.name = name;
         this.profileImage = profileImage;
         this.subscription = subscription;
         this.createdAt = createdAt;
+        this.provider = provider;
     }
 
     /** Lombok @Getter @Setter 대체 */
@@ -48,6 +50,9 @@ public class UserResponse {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
+    public String getProvider() { return provider; }
+    public void setProvider(String provider) { this.provider = provider; }
+
     /** Lombok @Builder 대체: 수동 구현한 빌더 패턴 */
     public static class UserResponseBuilder {
         private UUID id;
@@ -56,6 +61,7 @@ public class UserResponse {
         private String profileImage;
         private String subscription;
         private LocalDateTime createdAt;
+        private String provider;
 
         public UserResponseBuilder id(UUID id) { this.id = id; return this; }
         public UserResponseBuilder email(String email) { this.email = email; return this; }
@@ -63,9 +69,10 @@ public class UserResponse {
         public UserResponseBuilder profileImage(String profileImage) { this.profileImage = profileImage; return this; }
         public UserResponseBuilder subscription(String subscription) { this.subscription = subscription; return this; }
         public UserResponseBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public UserResponseBuilder provider(String provider) { this.provider = provider; return this; }
 
         public UserResponse build() {
-            return new UserResponse(id, email, name, profileImage, subscription, createdAt);
+            return new UserResponse(id, email, name, profileImage, subscription, createdAt, provider);
         }
     }
 

@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/(main)/page": [
+    "/(main)/knowledge/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(main)/page.js"
+      "static/chunks/app/(main)/knowledge/page.js"
     ],
     "/(main)/layout": [
       "static/chunks/webpack.js",
@@ -26,20 +26,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/layout.js"
     ],
-    "/(main)/knowledge/page": [
+    "/(main)/terms/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(main)/knowledge/page.js"
+      "static/chunks/app/(main)/terms/page.js"
     ],
-    "/(main)/knowledge/[id]/page": [
+    "/(main)/terms/[id]/edit/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(main)/knowledge/[id]/page.js"
-    ],
-    "/(main)/ai/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(main)/ai/page.js"
+      "static/chunks/app/(main)/terms/[id]/edit/page.js"
     ]
   }
 }
