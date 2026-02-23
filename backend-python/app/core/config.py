@@ -6,7 +6,6 @@
 - 외부 API 설정
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field
 from typing import Optional
 
 
@@ -27,14 +26,12 @@ class Settings(BaseSettings):
     # 데이터베이스 (2개 DB 분리 구조)
     # ===================
     
-    # AI DB: Python 전용 (시각화, 상관관계, 가상 피팅)
-    # - Alembic 마이그레이션 대상
-    # - 이 DB에 대해 R/W 수행
-    database_url: str = "postgresql+psycopg://model_dev:dev1234@localhost:5432/quantum_ai"
+    # AI DB: Python 전용 (quantum_ai). env: AI_DATABASE_URL (Java DATABASE_URL과 구분)
+    # - Alembic 마이그레이션 대상, R/W
+    ai_database_url: str = "postgresql+psycopg://model_dev:dev1234@localhost:5432/quantum_ai"
     
-    # Service DB: Java 전용 (인증, 결제, 프로젝트, 지식 베이스)
-    # - Python에서는 읽기 전용으로 접근 (knowledge_base RAG 조회용)
-    # - 스키마 관리는 Java Flyway가 담당
+    # Service DB: quantum_service. env: SERVICE_DATABASE_URL
+    # - Python에서는 읽기 전용 (knowledge_base RAG 조회용)
     service_database_url: str = "postgresql+psycopg://model_dev:dev1234@localhost:5432/quantum_service"
     
     @property
@@ -42,7 +39,7 @@ class Settings(BaseSettings):
         """
         SQLAlchemy용 AI DB URL 반환 (Alembic, 메인 세션)
         """
-        url = self.database_url
+        url = self.ai_database_url
         if url.startswith("jdbc:postgresql://"):
             url = url.replace("jdbc:postgresql://", "postgresql+psycopg://")
         elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg://"):

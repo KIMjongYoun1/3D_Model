@@ -156,37 +156,34 @@ class AIAgentService:
     def _build_specialized_prompt(self, text: str, category: str, knowledge: str, render_type: str) -> str:
         """카테고리별 특화 프롬프트 생성 (RAG 강화 버전)"""
         cat_info = CATEGORIES[category]
-        
+        use_settlement = render_type == "settlement" or any(k in text for k in ["만원", "원", "금액", "매출", "매입", "비용"])
+        suggested_render = "settlement" if use_settlement else render_type
+
+        table_data_instruction = ""
+        if use_settlement:
+            table_data_instruction = """
+        [차트/정산용] 숫자(금액·비율)가 있으면 반드시 "table_data" 배열을 포함하세요.
+        형식: [{"항목":"이름","금액":숫자},{"항목":"이름2","금액":숫자2},...]
+        예: "매출 12500만원, 매입 7200" → "table_data":[{"항목":"매출","금액":12500},{"항목":"매입","금액":7200}]
+        """
+
         return f"""
         당신은 {cat_info.description} 분야의 시각화 전문가입니다.
-        제공된 [데이터]를 분석하여 3D 지식 맵(JSON)으로 변환하세요.
+        [데이터]를 분석하여 JSON으로 변환하세요.{table_data_instruction}
 
-        [지식 베이스 및 시각화 규칙]
-        {knowledge if knowledge else "관련된 특정 규칙이 없습니다. 일반적인 시각화 원칙을 따르세요."}
-        
-        위 지식 베이스에 명시된 규칙(색상, 관계, 중요도 등)이 있다면 반드시 결과에 반영하십시오.
-        또한, 각 키워드(keyword)의 'definition' 필드 마지막에 참고한 지식의 제목을 "[출처: 제목]" 형태로 명시하세요.
+        [지식 베이스] {knowledge if knowledge else "해당 없음."}
 
-        [출력 형식]
+        [출력 형식] JSON만 출력:
         {{
-            "summary": "전체 데이터의 핵심 요약 (한국어)",
-            "suggested_render": "{render_type}",
-            "keywords": [
-                {{
-                    "term": "핵심 키워드",
-                    "value": "데이터 값",
-                    "definition": "전문적 해석 및 [출처: 지식제목]",
-                    "importance": 1-10,
-                    "color_hint": "지식 베이스에서 제안한 색상 코드 (없으면 생략)"
-                }}
-            ],
-            "relations": [
-                {{"source": "키워드A", "target": "키워드B", "label": "관계 설명", "strength": 1-10}}
-            ]
+            "summary": "핵심 요약 (한국어)",
+            "suggested_render": "{suggested_render}",
+            "table_data": [{{"항목": "항목명", "금액": 숫자}}],
+            "keywords": [{{"term": "키워드", "value": "값", "definition": "해석", "importance": 1-10}}],
+            "relations": [{{"source": "A", "target": "B", "label": "관계", "strength": 1-10}}]
         }}
 
         [데이터]
-        {text[:2000]} # 토큰 절약을 위해 텍스트 제한
+        {text[:2000]}
         """
 
     async def _run_local_model(self, prompt: str) -> Dict[str, Any]:

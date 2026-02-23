@@ -6,8 +6,9 @@ import jakarta.validation.constraints.Size;
 
 /**
  * 회원가입 요청 DTO
- * 
- * ⚠️ Lombok 제거 버전
+ *
+ * Lombok 미사용: VS Code/Cursor 환경에서 Lombok 플러그인 호환 이슈로 수동 구현.
+ * Lombok 사용 시 {@code @Getter @Setter @NoArgsConstructor}로 아래 Getter/Setter 대체 가능.
  */
 public class RegisterRequest {
     
@@ -24,6 +25,7 @@ public class RegisterRequest {
 
     public RegisterRequest() {}
 
+    /** Lombok @Getter @Setter 대체 */
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 

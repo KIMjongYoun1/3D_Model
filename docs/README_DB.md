@@ -13,7 +13,7 @@ Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니�
 | DB 이름 | 마이그레이션 | 소유 서비스 | 역할 |
 | :--- | :--- | :--- | :--- |
 | **quantum_service** | Flyway (Java) | Service WAS, Admin WAS | 인증, 결제, 프로젝트, 지식 베이스 |
-| **quantum_ai** | Alembic (Python) | Python AI Engine | 시각화, 상관관계, 가상 피팅 |
+| **quantum_ai** | Alembic (Python) | Python AI Engine | 시각화, 상관관계 |
 
 ### 테이블 소유권
 
@@ -27,9 +27,6 @@ Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니�
 **quantum_ai** (Alembic 전담)
 - `visualization_data` — 3D 시각화 매핑 데이터
 - `correlation_rules` — 노드 간 상관관계 규칙
-- `avatars` — 사용자 아바타
-- `garments` — 의류 데이터
-- `tryon_results` — 가상 피팅 결과
 
 ### Cross-DB 접근
 
@@ -44,9 +41,10 @@ Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니�
   - V1~V6: users, subscriptions, payments, social_auth, refresh_token, knowledge_base
 - **Python (Alembic)**: `backend-python/alembic/versions/`
   - 001: UUID 확장 활성화 (users 테이블은 Flyway가 담당)
-  - 002: avatars, garments, tryon_results
+  - 002: avatars, garments, tryon_results (피팅 기능, 005에서 제거)
   - 003: visualization_data
   - 004: correlation_rules
+  - 005: avatars, garments, tryon_results 테이블 제거 (데이터 시각화 집중)
 
 ---
 

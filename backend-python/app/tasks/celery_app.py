@@ -7,7 +7,7 @@ from app.core.config import settings
 
 # Celery 앱 생성
 celery_app = Celery(
-    "virtual_tryon",
+    "quantum_studio",
     broker=settings.redis_url,
     backend=settings.redis_url
 )

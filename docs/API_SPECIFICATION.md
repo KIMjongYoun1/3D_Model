@@ -2,7 +2,39 @@
 
 Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 백엔드의 역할에 따라 API와 내부 메소드가 분리되어 있습니다. 본 문서는 각 기능의 상세 명세와 내부 동작 원리를 기록합니다.
 
-> **최종 업데이트**: 2026-02-09 — Java 멀티 모듈 구조(`quantum-core`, `quantum-api-service`, `quantum-api-admin`) 반영
+> **최종 업데이트**: 2026-02-19 — 기능별 작동 여부·설계 이유 반영
+
+---
+
+## 📋 기능별 작동 여부 (Feature Status)
+
+| 구분 | 기능 | 상태 | 비고 |
+| :--- | :--- | :--- | :--- |
+| **Java Service** | 이메일 로그인/회원가입, JWT 갱신 | ✅ | |
+| | 네이버 소셜 로그인 | ✅ | |
+| | 결제 시뮬레이션 | ✅ | success-rate로 시뮬레이션 |
+| | 프로젝트 CRUD | ✅ | |
+| **Java Admin** | 관리자 인증 (login/register/me) | ✅ | `admin_users` 테이블, 일반 JWT와 분리 |
+| | 지식 베이스 CRUD, 소스별 목록/상세 | ✅ | BOK/DART/LAW 상세 테이블 지원 |
+| | BOK·DART·LAW 외부 API 수집 | ✅ | corp_code 활용 시 DART 장기 검색 가능 |
+| **Python AI (8000)** | 매핑 API (3D 변환, 업로드, 히스토리) | ✅ | MappingOrchestrator, AIAgentService |
+| **Admin AI (8002)** | Ollama/Gemini 채팅 | ✅ | Ollama 없으면 Gemini 폴백 |
+| **Frontend Studio** | 로그인·결제·마이페이지·스튜디오 | ⚠️ | 로그인 API 연동 TODO |
+| **Frontend Admin** | 로그인·지식 관리·AI | ✅ | |
+
+> `✅` 동작 | `⚠️` 부분 동작 | `❌` 미구현
+
+---
+
+## 🛠 주요 설계 선택 및 이유 (Design Rationale)
+
+| 선택 | 이유 |
+| :--- | :--- |
+| **Service/Admin WAS 분리** | 보안(관리자 API 격리), 안정성(서비스 장애 시에도 Admin 운영 가능), 스케일 분리 |
+| **인증 분리 (users vs admin_users)** | 일반 사용자 JWT로 Admin API 접근 차단, `type="admin"` 검증 |
+| **지식 소스 테이블 분리 (bok/dart/law)** | 외부 API 응답 형식 그대로 저장 → 상세 조회·필터 용이, DART corp_code로 3개월 제한 우회 |
+| **Admin AI 별도 서버 (8002)** | Studio AI(매핑)와 역할 분리, 관리자 전용 분석·조회에 맞춘 DB·LLM 전략 |
+| **Ollama → Gemini 폴백** | 로컬 비용 절감, 오프라인 시에도 Admin AI 기동 가능 |
 
 ---
 
@@ -43,11 +75,31 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 
 ### 2. Admin API 명세 (quantum-api-admin - Controllers)
 
-#### [관리자 API] - `AdminController`
+**Base URL**: `http://localhost:8081`
+
+#### [관리자 인증] - `AdminAuthController` (`/api/admin/auth`)
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| - | 지식 베이스 관리 | 도메인 지식 CRUD |
-| - | 외부 API 연동 | 법제처, DART, 한국은행 ECOS 데이터 수집 |
+| `POST` | `/login` | 관리자 로그인 |
+| `POST` | `/register` | 관리자 계정 생성 |
+| `GET` | `/me` | 현재 관리자 정보 |
+
+#### [지식 베이스] - `AdminController` (`/api/admin/knowledge`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 전체 지식 목록 |
+| `GET` | `/{id}` | 단일 지식 상세 |
+| `POST` | `/` | 지식 직접 추가 |
+| `DELETE` | `/{id}` | 지식 삭제 |
+| `GET` | `/fetch-history` | 수집 히스토리 |
+| `POST` | `/fetch-bok` | 한국은행 경제지표 수집 |
+| `POST` | `/fetch-dart` | DART 공시 수집 (corpName 옵션) |
+| `POST` | `/fetch-law` | 법령 수집 (lawName 파라미터) |
+| `GET` | `/law-preview` | 법령 API 미리보기 (저장 없음) |
+| `GET` | `/bok`, `/bok/{id}` | BOK 목록/상세 |
+| `GET` | `/dart`, `/dart/{id}` | DART 목록/상세 |
+| `GET` | `/law`, `/law/{id}` | LAW 목록/상세 |
+| `GET` | `/dart/corp-codes` | DART 기업코드 목록 |
 
 ### 3. 주요 메소드 명세 (Services)
 
@@ -130,11 +182,23 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 
 ---
 
+## 🟣 Admin AI Server (관리자용 AI)
+**Base URL**: `http://localhost:8002`
+**역할**: 관리자 전용 자연어 프롬프트, quantum_service 읽기 전용 분석
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/admin-ai/chat` | 채팅 메시지 (Ollama/Gemini) |
+| `GET` | `/api/admin-ai/intents` | 지원 의도 목록 |
+| `GET` | `/health` | 헬스 체크 |
+
+---
+
 ## 🏛 공통 사항
-- **보안**: 모든 API는 `JwtAuthenticationFilter`(`quantum-core`) 및 보안 미들웨어(Python)를 통해 검증됩니다.
-- **문서화**: Python 백엔드는 `/docs` 경로에서 Swagger UI를 통해 실시간 테스트가 가능합니다.
+- **보안**: Java API는 `JwtAuthenticationFilter`(`quantum-core`)로 검증. Admin API는 `type="admin"` JWT 필요.
+- **문서화**: Python·Admin AI는 `/docs` 경로에서 Swagger UI 제공.
 - **DB 마이그레이션**:
-  - Java: `quantum-api-service/src/main/resources/db/migration/` (Flyway, V1~V6)
+  - Java: `quantum-api-service/.../db/migration/` (Flyway, V1~V10)
   - Python: `alembic/versions/` (Alembic, 001~004)
 
 ---

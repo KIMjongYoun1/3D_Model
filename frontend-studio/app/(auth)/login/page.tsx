@@ -20,7 +20,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* 로고/브랜드 영역 */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Virtual Try-On</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quantum Studio</h1>
           <p className="text-gray-600">로그인하여 서비스를 시작하세요</p>
         </div>
 

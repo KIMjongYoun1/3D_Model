@@ -74,6 +74,13 @@ cd backend-python && alembic upgrade head
 
 ## 🚀 개발 서버 실행
 
+### 한 번에 전체 기동 (권장)
+```bash
+./start.sh          # 전체 기동 (로그: .run/logs/)
+./start.sh --tail   # 기동 + 로그 실시간 스트리밍
+./stop.sh           # 전체 종료
+```
+
 ### 1. Frontend
 ```bash
 # 서비스용 (Studio)

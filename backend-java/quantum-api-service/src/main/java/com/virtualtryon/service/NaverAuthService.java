@@ -121,7 +121,7 @@ public class NaverAuthService {
         Optional<User> existingByProvider = userRepository.findByProviderAndProviderId("NAVER", profile.getId());
         
         if (existingByProvider.isPresent()) {
-            User user = existingByProvider.get();
+            User user = existingByProvider.orElseThrow();
             user.setName(profile.getName());
             user.setProfileImage(profile.getProfileImage());
             user.setMobile(profile.getMobile());
@@ -132,7 +132,7 @@ public class NaverAuthService {
         Optional<User> existingByEmail = userRepository.findByEmail(profile.getEmail());
         
         if (existingByEmail.isPresent()) {
-            User user = existingByEmail.get();
+            User user = existingByEmail.orElseThrow();
             user.setProvider("NAVER");
             user.setProviderId(profile.getId());
             user.setProfileImage(profile.getProfileImage());

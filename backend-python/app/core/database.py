@@ -2,7 +2,7 @@
 데이터베이스 연결 및 세션 관리 (2개 DB 분리 구조)
 
 1. AI DB (quantum_ai): Python 전용, R/W
-   - visualization_data, correlation_rules, avatars, garments, tryon_results
+   - visualization_data, correlation_rules
    - Alembic 마이그레이션 대상
 
 2. Service DB (quantum_service): Java 전용, Python에서는 READ ONLY

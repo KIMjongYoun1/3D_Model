@@ -5,8 +5,9 @@ import java.util.UUID;
 
 /**
  * 사용자 응답 DTO
- * 
- * ⚠️ Lombok 제거 버전
+ *
+ * Lombok 미사용: VS Code/Cursor 환경에서 Lombok 플러그인 호환 이슈로 수동 구현.
+ * Lombok 사용 시 {@code @Getter @Setter @Builder}로 아래 코드를 모두 대체 가능.
  */
 public class UserResponse {
     
@@ -28,7 +29,7 @@ public class UserResponse {
         this.createdAt = createdAt;
     }
 
-    // Getter & Setter
+    /** Lombok @Getter @Setter 대체 */
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -47,7 +48,7 @@ public class UserResponse {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    // Builder 패턴 시뮬레이션
+    /** Lombok @Builder 대체: 수동 구현한 빌더 패턴 */
     public static class UserResponseBuilder {
         private UUID id;
         private String email;

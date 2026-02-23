@@ -104,9 +104,11 @@ class MappingOrchestrator:
         links = []
         total_amount = 0
         
+        amount_keys = ['금액', 'amount', 'price', '매출', '매입', '합계', 'value', '수량']
+        label_keys = ['명', '항목', 'name', '구분', '항목명', '제목']
         for row in data:
             for k, v in row.items():
-                if any(key in k.lower() for key in ['금액', 'amount', 'price']):
+                if any(key in k.lower() for key in amount_keys):
                     try: total_amount += float(v)
                     except: pass
 
@@ -123,7 +125,7 @@ class MappingOrchestrator:
         # 개별 항목 노드 배치
         for i, row in enumerate(data[:50]):
             node_id = f"item_{i}"
-            label = next((str(v) for k, v in row.items() if any(key in k.lower() for key in ['명', '항목', 'name'])), f"Item {i}")
+            label = next((str(v) for k, v in row.items() if any(key in k.lower() for key in label_keys)), next((str(v) for k, v in row.items() if v is not None and str(v).strip()), f"Item {i}"))
             
             angle = (i / len(data[:50])) * math.pi * 2 if len(data) > 0 else 0
             radius = 15

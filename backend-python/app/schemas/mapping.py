@@ -2,14 +2,14 @@
 매핑 스키마 (DTO)
 """
 from pydantic import BaseModel, Field
-from typing import Optional, Any, Union, Dict
+from typing import Optional, Any, Union, Dict, List
 from uuid import UUID
 from datetime import datetime
 
 class MappingBase(BaseModel):
     data_type: str = Field(..., description="데이터 유형")
     # Union[Dict, str]을 사용하여 JSON 객체와 일반 문자열 모두 허용합니다.
-    raw_data: Optional[Union[Dict[str, Any], str]] = Field(None, description="원본 데이터 (JSON 또는 Text)")
+    raw_data: Optional[Union[Dict[str, Any], List[Any], str]] = Field(None, description="원본 데이터 (JSON 객체/배열 또는 Text)")
 
 class MappingCreate(MappingBase):
     main_category: Optional[str] = Field(None, description="메인 카테고리 (예: FINANCE, INFRA)")

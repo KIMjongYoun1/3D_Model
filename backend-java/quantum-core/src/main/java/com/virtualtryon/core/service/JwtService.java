@@ -60,7 +60,7 @@ public class JwtService {
     }
     
     /**
-     * JWT 토큰 생성
+     * JWT 토큰 생성 (일반 사용자용, type="user")
      * 
      * ⭐ 위변조 방지:
      * - 비밀키로 서명 생성
@@ -71,8 +71,20 @@ public class JwtService {
      * @return JWT 토큰 문자열
      */
     public String generateToken(UUID userId) {
+        return generateToken(userId, "user");
+    }
+
+    /**
+     * JWT 토큰 생성 (type 지정)
+     * 
+     * @param userId 사용자 ID
+     * @param tokenType 토큰 타입 ("user" 또는 "admin")
+     * @return JWT 토큰 문자열
+     */
+    public String generateToken(UUID userId, String tokenType) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", userId.toString());  // subject: 사용자 ID
+        claims.put("type", tokenType);         // 토큰 타입: user 또는 admin
         
         return createToken(claims, expireMinutes * 60 * 1000L);
     }
@@ -84,9 +96,20 @@ public class JwtService {
      * @return Refresh Token 문자열
      */
     public String generateRefreshToken(UUID userId) {
+        return generateRefreshToken(userId, "user");
+    }
+
+    /**
+     * Refresh Token 생성 (type 지정)
+     * 
+     * @param userId 사용자 ID
+     * @param tokenType 토큰 타입 ("user" 또는 "admin")
+     * @return Refresh Token 문자열
+     */
+    public String generateRefreshToken(UUID userId, String tokenType) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", userId.toString());
-        claims.put("type", "refresh");
+        claims.put("type", "refresh_" + tokenType);  // refresh_user 또는 refresh_admin
         
         return createToken(claims, refreshExpireDays * 24 * 60 * 60 * 1000L);
     }
@@ -121,6 +144,22 @@ public class JwtService {
         return UUID.fromString(userIdStr);
     }
     
+    /**
+     * JWT 토큰에서 토큰 타입 추출
+     * 
+     * @param token JWT 토큰
+     * @return 토큰 타입 ("user", "admin", "refresh_user", "refresh_admin")
+     */
+    public String extractTokenType(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object type = claims.get("type");
+            return type != null ? type.toString() : "user";
+        } catch (Exception e) {
+            return "user";
+        }
+    }
+
     /**
      * JWT 토큰에서 만료 시간 추출
      * 
@@ -224,7 +263,7 @@ public class JwtService {
         try {
             Claims claims = extractAllClaims(token);
             Object claimValue = claims.get(claimName);
-            return expectedValue.equals(claimValue);
+            return java.util.Objects.equals(claimValue, expectedValue);
         } catch (Exception e) {
             return false;
         }

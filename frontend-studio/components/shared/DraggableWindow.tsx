@@ -82,11 +82,22 @@ export function DraggableWindow({ node, onClose, zIndex, onFocus, isTop }: Dragg
             <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Raw_Data</span>
           </div>
           <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-100 shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
-            <p className="text-[12px] font-medium text-slate-700 leading-relaxed break-words">
-              {typeof node.value === 'string' && node.value.includes('● 데이터:') 
-                ? node.value.split('● 데이터:')[1].split('● 해석:')[0].trim()
-                : (typeof node.value === 'string' ? node.value : JSON.stringify(node.value, null, 2))}
-            </p>
+            {typeof node.value === 'object' && node.value !== null && !Array.isArray(node.value) ? (
+              <div className="space-y-2">
+                {Object.entries(node.value).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4 text-[12px]">
+                    <span className="font-bold text-slate-500 min-w-[80px]">{k}</span>
+                    <span className="font-medium text-slate-800 text-right break-all">{String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] font-medium text-slate-700 leading-relaxed break-words">
+                {typeof node.value === 'string' && node.value.includes('● 데이터:')
+                  ? node.value.split('● 데이터:')[1]?.split('● 해석:')[0]?.trim() ?? node.value
+                  : (typeof node.value === 'string' ? node.value : JSON.stringify(node.value, null, 2))}
+              </p>
+            )}
           </div>
         </div>
 

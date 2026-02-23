@@ -26,11 +26,15 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final HttpsEnforcementFilter httpsEnforcementFilter;
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            HttpsEnforcementFilter httpsEnforcementFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.httpsEnforcementFilter = httpsEnforcementFilter;
     }
 
     /**
@@ -75,6 +79,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()                    // 나머지는 인증 필요
             )
             
+            // HTTPS 강제 / HSTS (app.https-only, app.hsts 설정 시)
+            .addFilterBefore(httpsEnforcementFilter, UsernamePasswordAuthenticationFilter.class)
             // JWT 필터 추가
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         

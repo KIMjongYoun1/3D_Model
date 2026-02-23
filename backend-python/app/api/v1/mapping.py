@@ -67,6 +67,7 @@ async def create_mapping_from_file(
     file: UploadFile = File(...),
     main_category: Optional[str] = None,
     sub_category: Optional[str] = None,
+    render_type: Optional[str] = "auto",
     db: Session = Depends(get_db),
     service_db: Session = Depends(get_service_db)
 ):
@@ -77,11 +78,12 @@ async def create_mapping_from_file(
         if not extracted_data:
             raise HTTPException(status_code=400, detail="데이터 추출 실패")
 
-        # 시각화 옵션 구성
+        # 시각화 옵션 구성 (render_type: auto | diagram | settlement)
         options = {
             "filename": file.filename,
             "main_category": main_category,
-            "sub_category": sub_category
+            "sub_category": sub_category,
+            "render_type": render_type or "auto",
         }
 
         # 3D 좌표 데이터 생성 (service_db로 knowledge_base RAG 조회)

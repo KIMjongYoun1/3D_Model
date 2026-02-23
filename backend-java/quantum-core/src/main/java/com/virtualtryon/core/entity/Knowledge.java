@@ -28,11 +28,19 @@ public class Knowledge {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    /** 법령 조문 본문 (content는 요약, article_body는 상세 조문) */
+    @Column(name = "article_body", columnDefinition = "TEXT")
+    private String articleBody;
+
     @Column(name = "source_url")
     private String sourceUrl;
 
     @Column(name = "source_type", length = 50)
     private String sourceType = "manual";
+
+    /** 외부 API 항목 식별자. source_type과 조합해 동일 항목 upsert 시 사용 (카테고리별·항목별 저장) */
+    @Column(name = "external_id", length = 255)
+    private String externalId;
 
     @Column(name = "is_active")
     private boolean isActive = true;
@@ -70,11 +78,17 @@ public class Knowledge {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
+    public String getArticleBody() { return articleBody; }
+    public void setArticleBody(String articleBody) { this.articleBody = articleBody; }
+
     public String getSourceUrl() { return sourceUrl; }
     public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
 
     public String getSourceType() { return sourceType; }
     public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+
+    public String getExternalId() { return externalId; }
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
@@ -96,6 +110,7 @@ public class Knowledge {
         private String content;
         private String sourceUrl;
         private String sourceType = "manual";
+        private String externalId;
         private boolean isActive = true;
 
         public KnowledgeBuilder category(String category) { this.category = category; return this; }
@@ -103,6 +118,7 @@ public class Knowledge {
         public KnowledgeBuilder content(String content) { this.content = content; return this; }
         public KnowledgeBuilder sourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; return this; }
         public KnowledgeBuilder sourceType(String sourceType) { this.sourceType = sourceType; return this; }
+        public KnowledgeBuilder externalId(String externalId) { this.externalId = externalId; return this; }
         public KnowledgeBuilder isActive(boolean isActive) { this.isActive = isActive; return this; }
 
         public Knowledge build() {
@@ -112,6 +128,7 @@ public class Knowledge {
             knowledge.setContent(content);
             knowledge.setSourceUrl(sourceUrl);
             knowledge.setSourceType(sourceType);
+            knowledge.setExternalId(externalId);
             knowledge.setActive(isActive);
             return knowledge;
         }

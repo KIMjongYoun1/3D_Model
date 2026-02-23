@@ -1,16 +1,5 @@
-# Pydantic 스키마 정의
-# - API 요청/응답 데이터 검증
+# Pydantic 스키마 정의 (데이터 시각화 전용)
+from .mapping import MappingCreate, MappingResponse
 
-from .tryon import TryOnRequest, TryOnResponse
-from .garment import GarmentCreate, GarmentResponse
-from .avatar import AvatarCreate, AvatarResponse
-
-__all__ = [
-    "TryOnRequest",
-    "TryOnResponse",
-    "GarmentCreate",
-    "GarmentResponse",
-    "AvatarCreate",
-    "AvatarResponse",
-]
+__all__ = ["MappingCreate", "MappingResponse"]
 

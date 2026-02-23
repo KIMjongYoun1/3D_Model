@@ -4,8 +4,10 @@ import java.util.UUID;
 
 /**
  * 로그인 응답 DTO
- * 
- * ⚠️ Lombok 제거 버전
+ *
+ * Lombok 미사용: VS Code/Cursor 환경에서 Lombok 플러그인 호환 이슈로 수동 구현.
+ * Lombok 사용 시 {@code @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder}로
+ * 아래 Getter/Setter/Builder 클래스를 모두 대체 가능.
  */
 public class LoginResponse {
     
@@ -29,7 +31,7 @@ public class LoginResponse {
         this.provider = provider;
     }
 
-    // Getter & Setter
+    /** Lombok @Getter @Setter 대체 */
     public String getAccessToken() { return accessToken; }
     public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
 
@@ -51,7 +53,7 @@ public class LoginResponse {
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
 
-    // Builder 패턴 시뮬레이션
+    /** Lombok @Builder 대체: 수동 구현한 빌더 패턴 */
     public static class LoginResponseBuilder {
         private String accessToken;
         private String refreshToken;

@@ -1,11 +1,10 @@
 """
-Virtual Try-On Python Backend
+Quantum Studio Python Backend (데이터 시각화 AI 엔진)
 FastAPI 메인 애플리케이션
 
 역할:
-- AI 모델 연동 및 이미지 처리
-- Try-On 파이프라인 실행
-- 비동기 작업 큐 관리 (Celery)
+- 비정형 데이터 AI 분석 및 3D 매핑
+- 지식 베이스(RAG) 기반 분석
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,20 +38,24 @@ async def lifespan(app: FastAPI):
         from alembic.config import Config
         from alembic import command
         import os
-        
-        # Alembic 설정 및 경로 최적화
+
         base_dir = os.path.dirname(os.path.dirname(__file__))
         alembic_ini_path = os.path.join(base_dir, "alembic.ini")
-        
+
         if os.path.exists(alembic_ini_path):
             alembic_cfg = Config(alembic_ini_path)
-            # 현재 DB를 최신 마이그레이션 버전(head)으로 자동 업데이트
             command.upgrade(alembic_cfg, "head")
             print("✅ 데이터베이스 스키마 체크 및 마이그레이션 완료")
         else:
             print("⚠️ alembic.ini 파일을 찾을 수 없습니다. 경로를 확인해 주세요.")
     except Exception as e:
-        print(f"⚠️ 자동 마이그레이션 실패 (수동 실행 필요): {e}")
+        err_msg = str(e).lower()
+        # alembic_version 테이블/타입이 이미 있는 경우: DB는 이미 초기화된 상태로 간주하고 기동 계속
+        if "alembic_version" in err_msg and ("already exists" in err_msg or "duplicate" in err_msg or "unique" in err_msg):
+            print("⚠️ alembic_version이 이미 존재합니다. 스키마가 최신이면 무시해도 됩니다. 앱은 계속 기동합니다.")
+        else:
+            print(f"⚠️ 자동 마이그레이션 실패 (수동 실행 필요): {e}")
+            print("   수동 실행: cd backend-python && source venv/bin/activate && alembic upgrade head")
     
     # yield: startup과 shutdown의 경계
     # - yield 이전: startup 작업
@@ -75,8 +78,8 @@ async def lifespan(app: FastAPI):
 # - version: API 버전
 # - lifespan: 애플리케이션 생명주기 관리 (마이그레이션 자동 실행)
 app = FastAPI(
-    title="Virtual Try-On API",
-    description="AI 기반 Virtual Try-On 서비스 Python Backend",
+    title="Quantum Studio AI API",
+    description="비정형 데이터 3D 시각화 AI 엔진 - 매핑, 분석, RAG",
     version="0.1.0",
     lifespan=lifespan
 )
@@ -119,7 +122,7 @@ async def root():
     루트 엔드포인트
     - API 서버 상태 확인용
     """
-    return {"message": "Virtual Try-On Python Backend", "status": "running"}
+    return {"message": "Quantum Studio AI API", "status": "running"}
 
 @app.get("/health")
 async def health():
@@ -130,17 +133,9 @@ async def health():
     """
     return {"status": "healthy"}
 
-# API 라우터 등록
-from app.api.v1 import (
-    tryon_router, 
-    garments_router, 
-    avatars_router, 
-    mapping_router
-)
+# API 라우터 등록 (데이터 시각화 전용)
+from app.api.v1 import mapping_router
 
-app.include_router(tryon_router, prefix="/api/v1")
-app.include_router(garments_router, prefix="/api/v1")
-app.include_router(avatars_router, prefix="/api/v1")
 app.include_router(mapping_router, prefix="/api/v1")
 
 if __name__ == "__main__":

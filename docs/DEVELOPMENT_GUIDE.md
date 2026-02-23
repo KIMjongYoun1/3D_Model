@@ -111,6 +111,7 @@ Quantum Studio의 핵심 기술 구조와 개발 시 준수해야 할 패턴을 
 ## 🔗 관련 문서
 - [빠른 시작 가이드](../QUICK_START.md)
 - [프로젝트 개요](./PROJECT_OVERVIEW.md)
+- [**API 샘플 우선 개발 원칙**](./API_SAMPLE_FIRST_GUIDE.md) — 외부 API 연동 시 curl로 먼저 호출해 JSON 확인 후 코딩
 - [소셜 로그인 가이드](./SOCIAL_AUTH_SETUP.md)
 - [AI 에이전트 라우팅](./AI_AGENT_ROUTING.md)
 - [아키텍처 V2](./ARCHITECTURE_V2.md)
