@@ -6,6 +6,8 @@ import QuantumCanvas from "@/components/QuantumCanvas";
 import { DraggableWindow } from "@/components/shared/DraggableWindow";
 import ERDDiagram from "@/components/ERDDiagram";
 import ChartBarPanel from "@/components/studio/ChartBarPanel";
+import TableView from "@/components/studio/TableView";
+import NetworkView from "@/components/studio/NetworkView";
 import Onboarding from "@/components/studio/Onboarding";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -22,7 +24,7 @@ export default function QuantumStudioPage() {
   const [topNodeId, setTopNodeId] = useState<string | null>(null);
   const [showDiagram, setShowDiagram] = useState(true);
   const [vizMode, setVizMode] = useState<'2D' | '3D'>('3D');
-  const [vizSubMode, setVizSubMode] = useState<'diagram' | 'chart'>('diagram'); // 2D 모드 내 전환
+  const [vizSubMode, setVizSubMode] = useState<'table' | 'diagram' | 'chart' | 'network'>('table'); // 2D 모드 내 전환
   const [autoFocus, setAutoFocus] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [renderType, setRenderType] = useState<string>("auto");
@@ -180,19 +182,29 @@ export default function QuantumStudioPage() {
   const handleNodeSelect = useCallback((node: any, screenPos?: { x: number, y: number }) => {
     if (!node) return;
     setOpenNodes(prev => {
-      if (prev.find(n => n.id === node.id)) return prev;
+      const found = prev.find(n => n.id === node.id);
+      if (found) {
+        const filtered = prev.filter(n => n.id !== node.id);
+        setTopNodeId(filtered.length > 0 ? filtered[filtered.length - 1].id : null);
+        return filtered;
+      }
+      setTopNodeId(node.id);
       return [...prev, { ...node, initialX: screenPos?.x, initialY: screenPos?.y }];
     });
-    setTopNodeId(node.id);
   }, []);
 
   const handleDiagramNodeSelect = useCallback((node: any) => {
     if (!node) return;
     setOpenNodes(prev => {
-      if (prev.find(n => n.id === node.id)) return prev;
+      const found = prev.find(n => n.id === node.id);
+      if (found) {
+        const filtered = prev.filter(n => n.id !== node.id);
+        setTopNodeId(filtered.length > 0 ? filtered[filtered.length - 1].id : null);
+        return filtered;
+      }
+      setTopNodeId(node.id);
       return [...prev, { ...node }];
     });
-    setTopNodeId(node.id);
   }, []);
 
   const handleNodeClose = useCallback((id: string) => {
@@ -213,6 +225,21 @@ export default function QuantumStudioPage() {
   useEffect(() => {
     fetchLatestVisualization();
   }, [isLoggedIn]); // 로그인 상태가 변경될 때마다 다시 확인
+
+  // AI 추천 시각화 적용 (데이터 로드 시)
+  useEffect(() => {
+    const suggested = vizData?.mapping_data?.suggested_2d_viz;
+    const hasLinks = (vizData?.mapping_data?.links?.length ?? 0) >= 2;
+    if (suggested && ["table", "card", "chart", "network"].includes(suggested)) {
+      const mode = suggested === "card" ? "diagram" : suggested;
+      if (mode === "network" && !hasLinks) return; // links 없으면 network 무시
+      setVizSubMode(mode);
+    }
+    // links가 부족한데 network 모드면 테이블로 전환
+    if (!hasLinks && vizSubMode === "network") {
+      setVizSubMode("table");
+    }
+  }, [vizData?.id, vizData?.mapping_data?.links?.length, vizSubMode]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
@@ -261,18 +288,20 @@ export default function QuantumStudioPage() {
         </div>
         {vizMode === '2D' && (
           <div className="flex gap-1 bg-slate-100/50 p-1 rounded-full border border-slate-200">
-            <button
-              onClick={() => setVizSubMode('diagram')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${vizSubMode === 'diagram' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              다이어그램
-            </button>
-            <button
-              onClick={() => setVizSubMode('chart')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${vizSubMode === 'chart' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              차트
-            </button>
+            {[
+              { id: 'table' as const, label: '테이블' },
+              { id: 'diagram' as const, label: '카드' },
+              { id: 'chart' as const, label: '막대' },
+              { id: 'network' as const, label: '네트워크', hide: !vizData?.mapping_data?.links?.length || vizData.mapping_data.links.length < 2 },
+            ].filter((o) => !o.hide).map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setVizSubMode(opt.id)}
+                className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${vizSubMode === opt.id ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         )}
         <Button 
@@ -308,6 +337,26 @@ export default function QuantumStudioPage() {
                   openNodes={openNodes}
                   topNodeId={topNodeId}
                   onBarClick={handleNodeSelect}
+                  onBackToMain={handleBackToMain}
+                />
+              </div>
+            ) : vizSubMode === 'table' ? (
+              <div className="w-full h-full overflow-hidden bg-white">
+                <TableView
+                  data={vizData.mapping_data}
+                  openNodes={openNodes}
+                  topNodeId={topNodeId}
+                  onRowClick={handleNodeSelect}
+                  onBackToMain={handleBackToMain}
+                />
+              </div>
+            ) : vizSubMode === 'network' ? (
+              <div className="w-full h-full overflow-hidden bg-white">
+                <NetworkView
+                  data={vizData.mapping_data}
+                  openNodes={openNodes}
+                  topNodeId={topNodeId}
+                  onNodeClick={handleDiagramNodeSelect}
                   onBackToMain={handleBackToMain}
                 />
               </div>
@@ -364,9 +413,9 @@ export default function QuantumStudioPage() {
           </div>
         </div>
 
-        {/* [Layer 3] 글로벌 팝업 레이어 */}
+        {/* [Layer 3] 글로벌 팝업 레이어 — 3D 모드에서만 노드 팝업 표시. 2D는 하단 다이어그램 하이라이트만 */}
         <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
-          {openNodes.map((node) => (
+          {vizMode === '3D' && openNodes.map((node) => (
             <DraggableWindow key={node.id} node={node} onClose={handleNodeClose} onFocus={setTopNodeId} isTop={topNodeId === node.id} zIndex={topNodeId === node.id ? 100 : 10} />
           ))}
         </div>

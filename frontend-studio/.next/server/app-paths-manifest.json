@@ -1,6 +1,4 @@
 {
-  "/api/auth/callback/naver/page": "app/api/auth/callback/naver/page.js",
   "/studio/page": "app/studio/page.js",
-  "/page": "app/page.js",
-  "/mypage/page": "app/mypage/page.js"
+  "/api/auth/callback/naver/page": "app/api/auth/callback/naver/page.js"
 }

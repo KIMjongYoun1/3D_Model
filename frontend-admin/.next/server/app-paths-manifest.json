@@ -1,1 +1,12 @@
-{}
+{
+  "/(main)/terms/page": "app/(main)/terms/page.js",
+  "/(main)/terms/[id]/edit/page": "app/(main)/terms/[id]/edit/page.js",
+  "/(main)/plans/page": "app/(main)/plans/page.js",
+  "/(main)/plans/[id]/edit/page": "app/(main)/plans/[id]/edit/page.js",
+  "/(main)/ai/page": "app/(main)/ai/page.js",
+  "/(main)/members/page": "app/(main)/members/page.js",
+  "/(main)/transactions/page": "app/(main)/transactions/page.js",
+  "/(main)/subscriptions/page": "app/(main)/subscriptions/page.js",
+  "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
+  "/(main)/knowledge/page": "app/(main)/knowledge/page.js"
+}

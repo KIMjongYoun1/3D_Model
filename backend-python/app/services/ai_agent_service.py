@@ -156,8 +156,10 @@ class AIAgentService:
 {{
     "summary": "데이터의 핵심 요약 (한국어, 1~2문장)",
     "keywords": [{{"term": "핵심 키워드", "value": "대표값", "definition": "해석", "importance": 1-10}}],
-    "relations": [{{"source": "항목A", "target": "항목B", "label": "관계", "strength": 1-10}}]
+    "relations": [{{"source": "항목A", "target": "항목B", "label": "관계", "strength": 1-10}}],
+    "suggested_2d_viz": "table" 또는 "card" 또는 "chart" 또는 "network"
 }}
+suggested_2d_viz 규칙: 수치(금액·기온 등) 많으면 chart, 관계/구조가 있으면 network, 일반 텍스트/판례/소스는 table, 키워드 중심이면 card.
 
 {knowledge_context}
 
@@ -208,7 +210,8 @@ class AIAgentService:
                 "relations": [],
                 "detected_category": category,
                 "model_tier": "none",
-                "suggested_render": "settlement"
+                "suggested_render": "settlement",
+                "suggested_2d_viz": "table"
             }
 
     async def _call_ai_with_tier(self, text: str, category: str, knowledge: str, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -280,10 +283,12 @@ class AIAgentService:
         {{
             "summary": "핵심 요약 (한국어)",
             "suggested_render": "{suggested_render}",
+            "suggested_2d_viz": "table" 또는 "card" 또는 "chart" 또는 "network",
             "table_data": [{{"항목": "항목명", "금액": 숫자}}],
             "keywords": [{{"term": "키워드", "value": "값", "definition": "해석", "importance": 1-10}}],
             "relations": [{{"source": "A", "target": "B", "label": "관계", "strength": 1-10}}]
         }}
+        suggested_2d_viz 규칙: 수치(금액·기온) 많으면 chart, 관계/의존성 있으면 network, 판례·소스코드·텍스트는 table, 키워드 중심이면 card.
 
         [데이터]
         {text[:2000]}

@@ -47,10 +47,45 @@ class MappingOrchestrator:
         processing_time = int((time.time() - start_time) * 1000)
         result["processing_time_ms"] = processing_time
 
+        # suggested_2d_viz: AI 미반환 시 데이터 구조로 추론
+        if not result.get("suggested_2d_viz"):
+            result["suggested_2d_viz"] = self._infer_suggested_2d_viz(result)
+
         # references URL 검증 (MITM/조작 방지)
         result = sanitize_mapping_result(result)
 
         return result
+
+    def _infer_suggested_2d_viz(self, result: Dict[str, Any]) -> str:
+        """데이터 구조로 2D 시각화 추천 (table|card|chart|network)"""
+        nodes = result.get("nodes") or []
+        links = result.get("links") or []
+        render_type = result.get("render_type", "")
+        amount_keys = ["금액", "amount", "value", "매출", "기온", "온도", "temp"]
+        has_numeric = False
+        for n in nodes:
+            if n.get("type") == "root":
+                continue
+            v = n.get("value")
+            if isinstance(v, (int, float)):
+                has_numeric = True
+                break
+            if isinstance(v, dict):
+                for k, val in v.items():
+                    if any(ak in str(k).lower() for ak in amount_keys):
+                        try:
+                            float(str(val).replace(",", ""))
+                            has_numeric = True
+                            break
+                        except ValueError:
+                            pass
+        if len(links) >= 2 and len(nodes) >= 3:
+            return "network"
+        if has_numeric and render_type == "settlement":
+            return "chart"
+        if len(nodes) <= 8 and any(n.get("type") == "root" for n in nodes):
+            return "card"
+        return "table"
 
     async def _generate_base_mapping(self, data_type: str, raw_data: Any, db: Optional[Session], service_db: Optional[Session], options: Dict[str, Any]) -> Dict[str, Any]:
         """데이터 소스에 따른 시각화 처리 분기"""
@@ -182,7 +217,8 @@ class MappingOrchestrator:
                     break
         base["detected_category"] = ai_result.get("detected_category")
         base["model_tier"] = ai_result.get("model_tier")
-        # AI 키워드/관계가 있으면 링크에 반영 (선택적)
+        if ai_result.get("suggested_2d_viz") in ("table", "card", "chart", "network"):
+            base["suggested_2d_viz"] = ai_result["suggested_2d_viz"]
         return base
 
     def _handle_settlement_visualization(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -290,13 +326,16 @@ class MappingOrchestrator:
                 links.append({"source": source_id, "target": target_id, "label": rel.get("label", "")})
             
         # 메타데이터 전파
-        return {
+        out = {
             "render_type": "ai_analysis",
-            "nodes": nodes, 
+            "nodes": nodes,
             "links": links,
             "detected_category": ai_result.get("detected_category"),
             "model_tier": ai_result.get("model_tier")
         }
+        if ai_result.get("suggested_2d_viz") in ("table", "card", "chart", "network"):
+            out["suggested_2d_viz"] = ai_result["suggested_2d_viz"]
+        return out
 
     def _handle_json_diagram_visualization(self, data: Dict) -> Dict[str, Any]:
         """JSON 데이터를 노드-링크 구조로 변환"""
