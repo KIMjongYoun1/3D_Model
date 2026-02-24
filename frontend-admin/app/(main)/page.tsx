@@ -2,17 +2,19 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { checkAdminAuth } from "@/lib/adminApi";
 
 export default function AdminRootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
-    if (token) {
-      router.replace("/knowledge");
-    } else {
-      router.replace("/login");
-    }
+    checkAdminAuth().then((admin) => {
+      if (admin) {
+        router.replace("/knowledge");
+      } else {
+        router.replace("/login");
+      }
+    });
   }, [router]);
 
   return (

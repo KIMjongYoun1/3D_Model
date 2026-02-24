@@ -1,10 +1,62 @@
-# 보안 가이드 (JWT, HTTPS, XSS)
+# 보안 가이드 (JWT, HTTPS, XSS, Redirect, URL)
 
 Quantum Studio/Admin의 인증·통신 보안 권장사항을 정리한 문서입니다.
 
+> **최종 업데이트**: 2026-02-24 — Open Redirect, References URL 검증 반영
+
 ---
 
-## 1. HTTPS 사용
+## 1. Open Redirect 방지
+
+### 왜 필요한가?
+
+로그인 후 원래 보던 페이지로 돌아가기 위해 `?redirect=/payment` 같은 파라미터를 사용한다. 이 값을 **검증하지 않으면** 공격자가 `/login?redirect=https://가짜은행.com` 같은 링크를 만들어 사용자를 유도할 수 있다. 사용자가 로그인하면 우리 사이트를 거쳐 가짜 사이트로 이동하게 되고, "방금 로그인한 사이트에서 보내준 거니까 믿을 만하다"고 느끼게 되어 **피싱**에 악용될 수 있다.
+
+검증을 하면 `redirect`가 `/payment`, `/mypage` 같은 **우리 사이트 내부 경로**인지 확인하고, `https://...` 같은 **외부 주소**는 무시하여 기본 페이지로 보낸다. 따라서 "우리 사이트를 경유해 다른 사이트로 보내는" 일이 발생하지 않는다.
+
+### 적용
+- **authRedirect** (`frontend-studio/lib/authRedirect.ts`, `frontend-admin/lib/authRedirect.ts`)
+- `?redirect=` 파라미터 검증. 동일 출처 경로(`/`로 시작)만 허용.
+- `//`, `://`, `javascript:`, `data:`, `..` 등 차단.
+
+### 적용 위치
+| 위치 | 용도 |
+|------|------|
+| Studio 로그인 | `?redirect=` 검증 |
+| Admin 로그인 | `?redirect=` 검증 |
+| Naver 콜백, auth/agree | sessionStorage 값 검증 |
+| Header, MyPage | pathname 저장 시 검증 |
+
+---
+
+## 2. References URL 검증 (외부 링크)
+
+### 왜 필요한가?
+
+AI 분석 결과의 "참고 링크"는 AI가 생성하거나 API 응답에서 오는 값이라 **우리가 직접 제어할 수 없다**. 검증을 하지 않으면:
+
+1. **악성 URL**: `javascript:alert('해킹')` 같은 스크립트 URL이 들어가 사용자가 클릭 시 브라우저가 실행하여 **XSS**가 발생할 수 있다.
+2. **MITM(중간자 공격)**: 네트워크를 가로채 API 응답을 조작해 `https://악성사이트.com` 같은 주소를 넣을 수 있다.
+3. **Tab-nabbing**: 새 탭으로 열린 페이지가 `window.opener`로 우리 페이지를 조작할 수 있다. `rel="noopener noreferrer"`를 붙이지 않으면 이런 위험이 있다.
+
+검증을 하면 `http://`, `https://` 같은 **일반 웹 링크만** 허용하고, `javascript:`, `data:` 같은 **실행 가능한 URL**은 차단한다. 검증 실패 시 링크를 비활성화하고 텍스트만 표시하여 **클릭으로 인한 공격**을 막을 수 있다.
+
+### 적용
+- **safeUrl** (`frontend-studio/lib/safeUrl.ts`)
+- **url_sanitizer** (`backend-python/app/core/url_sanitizer.py`)
+
+### 규칙
+- http/https만 허용. javascript:, data:, file: 등 차단.
+- MITM으로 조작된 응답에서 악성 URL 차단.
+- 외부 링크에 `rel="noopener noreferrer"` 적용 (Tab-nabbing 방지).
+
+### 적용 위치
+- **프론트**: DraggableWindow의 `ref.url`. 검증 실패 시 링크 비활성화(텍스트만 표시).
+- **백엔드**: 매핑 결과 반환·저장 시 `sanitize_mapping_result()` 적용.
+
+---
+
+## 3. HTTPS 사용
 
 ### 왜 HTTPS인가?
 
@@ -32,12 +84,12 @@ Quantum Studio/Admin의 인증·통신 보안 권장사항을 정리한 문서�
 
 ---
 
-## 2. XSS와 JWT 저장
+## 4. XSS와 JWT 저장
 
 ### 현재 방식
 
 - JWT는 **Authorization: Bearer \<token\>** 헤더로 전송 (표준적).
-- 토큰은 **localStorage**에 저장 (Studio: `accessToken`, Admin: `adminToken`).
+- Studio: JWT는 **HttpOnly 쿠키**로 전달. Admin: JWT는 **HttpOnly 쿠키**(`admin_token`)로 전달.
 
 ### localStorage의 위험
 
@@ -59,25 +111,25 @@ Quantum Studio/Admin의 인증·통신 보안 권장사항을 정리한 문서�
 2. 백엔드 JWT 필터에서 **Cookie** 또는 **Authorization** 헤더 둘 다 처리 (기존 클라이언트 호환 가능).
 3. 프론트는 `credentials: 'include'`로 요청만 보내고, 토큰을 JS로 다루지 않음.
 
-현재 코드는 **개발 편의**를 위해 localStorage + Authorization 헤더 방식을 유지하고 있으며,  
-**프로덕션 배포 시** 위와 같이 HttpOnly 쿠키 전환을 권장합니다.
+Studio와 Admin 모두 **HttpOnly 쿠키** 방식으로 전환되어 있습니다.  
+Authorization 헤더도 계속 지원하여 기존 클라이언트와의 호환성을 유지합니다.
 
 ---
 
-## 3. 개발 vs 운영 체크리스트
+## 5. 개발 vs 운영 체크리스트
 
 | 항목 | 개발 | 운영 |
 |------|------|------|
 | 프로토콜 | HTTP (localhost) | **HTTPS만** |
 | HTTPS 강제 | 비활성 | `app.https-only=true` (또는 프록시에서 리다이렉트) |
 | HSTS | 비활성 | `app.hsts=true` 권장 |
-| 토큰 저장 | localStorage | **HttpOnly 쿠키** 권장 |
+| 토큰 저장 | ~~localStorage~~ | **HttpOnly 쿠키** (Studio, Admin 모두 적용됨) |
 | CORS | localhost 허용 | 실제 프론트 도메인만 허용 |
 | JWT Secret | 강한 비밀키 사용 | **환경변수로 관리**, 공개 저장소에 노출 금지 |
 
 ---
 
-## 4. 설정 요약
+## 6. 설정 요약
 
 ### application.yml (또는 환경변수)
 
@@ -94,7 +146,7 @@ app:
 
 ---
 
-## 5. 참고 링크
+## 7. 참고 링크
 
 - [OWASP JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
 - [OWASP XSS Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)

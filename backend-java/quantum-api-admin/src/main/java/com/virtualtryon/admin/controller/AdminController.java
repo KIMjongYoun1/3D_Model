@@ -272,11 +272,13 @@ public class AdminController {
 
     // ---- 소스별 상세 목록 조회 (응답 형식에 맞춘 테이블) ----
 
+    /** 한국은행 경제지표 목록 조회 */
     @GetMapping("/bok")
     public ResponseEntity<List<KnowledgeBok>> listBok(@RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(knowledgeBokRepository.findAllByOrderByTimeDesc(PageRequest.of(0, Math.min(size, 200))));
     }
 
+    /** 한국은행 경제지표 단건 조회 */
     @GetMapping("/bok/{id}")
     public ResponseEntity<?> getBok(@PathVariable UUID id) {
         if (id == null) return ResponseEntity.badRequest().build();
@@ -285,11 +287,13 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** DART 공시 정보 목록 조회 */
     @GetMapping("/dart")
     public ResponseEntity<List<KnowledgeDart>> listDart(@RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(knowledgeDartRepository.findAllByOrderByRceptDtDesc(PageRequest.of(0, Math.min(size, 200))));
     }
 
+    /** DART 공시 정보 단건 조회 */
     @GetMapping("/dart/{id}")
     public ResponseEntity<?> getDart(@PathVariable UUID id) {
         if (id == null) return ResponseEntity.badRequest().build();
@@ -298,11 +302,13 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** 법령 정보 목록 조회 */
     @GetMapping("/law")
     public ResponseEntity<List<KnowledgeLaw>> listLaw(@RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(knowledgeLawRepository.findAllByOrderByProclamationDateDesc(PageRequest.of(0, Math.min(size, 200))));
     }
 
+    /** 법령 정보 단건 조회 */
     @GetMapping("/law/{id}")
     public ResponseEntity<?> getLaw(@PathVariable UUID id) {
         if (id == null) return ResponseEntity.badRequest().build();
@@ -311,6 +317,7 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** DART 기업 코드 목록 조회 */
     @GetMapping("/dart/corp-codes")
     public ResponseEntity<List<DartCorpCode>> listDartCorpCodes(@RequestParam(defaultValue = "100") int size) {
         return ResponseEntity.ok(dartCorpCodeRepository.findAll(PageRequest.of(0, Math.min(size, 500))).getContent());

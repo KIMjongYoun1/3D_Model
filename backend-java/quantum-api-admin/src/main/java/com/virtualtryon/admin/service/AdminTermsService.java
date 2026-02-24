@@ -1,6 +1,6 @@
 package com.virtualtryon.admin.service;
 
-import com.virtualtryon.core.dto.TermsDetailDto;
+import com.virtualtryon.core.dto.terms.TermsDetailDto;
 import com.virtualtryon.core.entity.Terms;
 import com.virtualtryon.core.repository.TermsRepository;
 import org.springframework.data.domain.Sort;
@@ -43,12 +43,15 @@ public class AdminTermsService {
     /** 약관 등록 */
     @Transactional
     public TermsDetailDto create(String type, String version, String title, String content,
-                                 java.time.LocalDateTime effectiveAt) {
+                                 java.time.LocalDateTime effectiveAt, String category, Boolean required, Boolean isActive) {
         if (type == null || type.isBlank()) throw new IllegalArgumentException("type은 필수입니다.");
         if (version == null || version.isBlank()) throw new IllegalArgumentException("version은 필수입니다.");
         if (title == null || title.isBlank()) throw new IllegalArgumentException("title은 필수입니다.");
         if (content == null) content = "";
         if (effectiveAt == null) effectiveAt = java.time.LocalDateTime.now();
+        if (category == null || category.isBlank()) category = "SIGNUP";
+        if (required == null) required = true;
+        if (isActive == null) isActive = true;
 
         Terms terms = new Terms();
         terms.setType(type.trim());
@@ -56,6 +59,9 @@ public class AdminTermsService {
         terms.setTitle(title.trim());
         terms.setContent(content);
         terms.setEffectiveAt(effectiveAt);
+        terms.setCategory(category.trim());
+        terms.setRequired(required);
+        terms.setIsActive(isActive);
         terms = termsRepository.save(Objects.requireNonNull(terms, "저장할 Terms는 null일 수 없습니다."));
         return toDetail(terms);
     }
@@ -63,7 +69,7 @@ public class AdminTermsService {
     /** 약관 수정 */
     @Transactional
     public TermsDetailDto update(UUID id, String type, String version, String title,
-                                 String content, java.time.LocalDateTime effectiveAt) {
+                                 String content, java.time.LocalDateTime effectiveAt, String category, Boolean required, Boolean isActive) {
         Terms terms = termsRepository.findById(Objects.requireNonNull(id, "약관 ID는 null일 수 없습니다."))
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관 ID: " + id));
 
@@ -72,8 +78,32 @@ public class AdminTermsService {
         if (title != null && !title.isBlank()) terms.setTitle(title.trim());
         if (content != null) terms.setContent(content);
         if (effectiveAt != null) terms.setEffectiveAt(effectiveAt);
+        if (category != null && !category.isBlank()) terms.setCategory(category.trim());
+        if (required != null) terms.setRequired(required);
+        if (isActive != null) terms.setIsActive(isActive);
 
         terms = termsRepository.save(Objects.requireNonNull(terms, "저장할 Terms는 null일 수 없습니다."));
+        return toDetail(terms);
+    }
+
+    /** 새 버전 등록 (기존 약관 복사, version·effectiveAt만 새로) */
+    @Transactional
+    public TermsDetailDto createNewVersion(UUID sourceId, String newVersion, java.time.LocalDateTime effectiveAt) {
+        Terms source = termsRepository.findById(Objects.requireNonNull(sourceId, "sourceId는 null일 수 없습니다."))
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관 ID: " + sourceId));
+        if (newVersion == null || newVersion.isBlank()) throw new IllegalArgumentException("새 버전을 입력하세요.");
+        if (effectiveAt == null) effectiveAt = java.time.LocalDateTime.now();
+
+        Terms terms = new Terms();
+        terms.setType(source.getType());
+        terms.setVersion(newVersion.trim());
+        terms.setTitle(source.getTitle());
+        terms.setContent(source.getContent() != null ? source.getContent() : "");
+        terms.setEffectiveAt(effectiveAt);
+        terms.setCategory(source.getCategory() != null ? source.getCategory() : "SIGNUP");
+        terms.setRequired(source.getRequired() != null ? source.getRequired() : true);
+        terms.setIsActive(source.getIsActive() != null ? source.getIsActive() : true);
+        terms = termsRepository.save(terms);
         return toDetail(terms);
     }
 
@@ -96,6 +126,9 @@ public class AdminTermsService {
         d.setVersion(t.getVersion() != null ? t.getVersion() : "");
         d.setContent(t.getContent() != null ? t.getContent() : "");
         d.setEffectiveAt(t.getEffectiveAt());
+        d.setCategory(t.getCategory() != null ? t.getCategory() : "SIGNUP");
+        d.setRequired(t.getRequired() != null ? t.getRequired() : true);
+        d.setIsActive(t.getIsActive() != null ? t.getIsActive() : true);
         return d;
     }
 }

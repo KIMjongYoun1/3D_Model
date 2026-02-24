@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
+import { getSafeExternalUrl } from '@/lib/safeUrl';
 
 interface DraggableWindowProps {
   node: any;
@@ -124,17 +125,26 @@ export function DraggableWindow({ node, onClose, zIndex, onFocus, isTop }: Dragg
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">References & Evidence</span>
             </div>
             <div className="space-y-2">
-              {node.references.map((ref: any, idx: number) => (
-                <div key={idx} className="bg-slate-100/50 p-4 rounded-2xl border border-slate-200 group/ref transition-all hover:bg-white hover:shadow-md">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-black text-slate-700 truncate w-48">{ref.title}</span>
-                    <a href={ref.url} target="_blank" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                    </a>
+              {node.references.map((ref: any, idx: number) => {
+                const safeUrl = getSafeExternalUrl(ref?.url);
+                return (
+                  <div key={idx} className="bg-slate-100/50 p-4 rounded-2xl border border-slate-200 group/ref transition-all hover:bg-white hover:shadow-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-[10px] font-black text-slate-700 truncate w-48">{ref?.title ?? 'Reference'}</span>
+                      {safeUrl ? (
+                        <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                      ) : (
+                        <span className="text-slate-300 cursor-not-allowed" title="유효하지 않은 링크">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                        </span>
+                      )}
+                    </div>
+                    {ref?.snippet && <p className="text-[9px] text-slate-500 leading-normal italic line-clamp-2">"{ref.snippet}"</p>}
                   </div>
-                  {ref.snippet && <p className="text-[9px] text-slate-500 leading-normal italic line-clamp-2">"{ref.snippet}"</p>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -1,5 +1,6 @@
 package com.virtualtryon.admin.controller;
 
+import com.virtualtryon.admin.config.AdminCookieHelper;
 import com.virtualtryon.admin.service.AdminAuthService;
 import com.virtualtryon.core.entity.AdminUser;
 import org.springframework.http.HttpStatus;
@@ -16,21 +17,24 @@ import java.util.UUID;
  * Admin 인증 컨트롤러
  * 
  * 관리자 전용 로그인/등록 API
- * 일반 사용자 AuthController와 완전히 분리된 인증 체계
+ * JWT는 HttpOnly 쿠키(admin_token)로 전달. localStorage 사용하지 않음.
  */
 @RestController
 @RequestMapping("/api/admin/auth")
 public class AdminAuthController {
 
     private final AdminAuthService adminAuthService;
+    private final AdminCookieHelper adminCookieHelper;
 
-    public AdminAuthController(AdminAuthService adminAuthService) {
+    public AdminAuthController(AdminAuthService adminAuthService, AdminCookieHelper adminCookieHelper) {
         this.adminAuthService = adminAuthService;
+        this.adminCookieHelper = adminCookieHelper;
     }
 
     /**
      * 관리자 로그인
      * POST /api/admin/auth/login
+     * JWT는 HttpOnly 쿠키(admin_token)로 설정. 응답 본문에는 accessToken 제외.
      */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
@@ -48,15 +52,14 @@ public class AdminAuthController {
             AdminAuthService.AdminLoginResult result = adminAuthService.login(email, password);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("accessToken", result.getAccessToken());
-            response.put("refreshToken", result.getRefreshToken());
-            response.put("tokenType", "Bearer");
             response.put("adminId", result.getAdmin().getId());
             response.put("email", result.getAdmin().getEmail());
             response.put("name", result.getAdmin().getName());
             response.put("role", result.getAdmin().getRole());
 
-            return ResponseEntity.ok(response);
+            ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+            adminCookieHelper.addAdminTokenCookie(builder, result.getAccessToken());
+            return builder.body(response);
         } catch (BadCredentialsException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "이메일 또는 비밀번호가 올바르지 않습니다.");
@@ -129,5 +132,17 @@ public class AdminAuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+    /**
+     * 관리자 로그아웃
+     * POST /api/admin/auth/logout
+     * HttpOnly 쿠키(admin_token) 삭제
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+        adminCookieHelper.clearAdminTokenCookie(builder);
+        return builder.build();
     }
 }

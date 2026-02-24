@@ -2,7 +2,7 @@
 
 Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니다.
 
-> **최종 업데이트**: 2026-02-09 — 2개 DB 물리 분리 구조 적용
+> **최종 업데이트**: 2026-02-24 — plan_config, terms, users.suspended_at 반영
 
 ---
 
@@ -18,9 +18,12 @@ Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니�
 ### 테이블 소유권
 
 **quantum_service** (Flyway 전담)
-- `users` — 사용자 정보
+- `users` — 사용자 정보 (`suspended_at`, `deleted_at` 포함)
 - `subscriptions` — 구독 플랜
 - `payments` — 결제 내역
+- `plan_config` — 요금제/플랜 설정
+- `terms` — 약관 버전 (category: SIGNUP/PAYMENT, required)
+- `user_terms_agreement` — 사용자별 약관 동의 이력
 - `projects` — 프로젝트
 - `knowledge_base` — 지식 베이스 (RAG 원본 데이터)
 
@@ -39,6 +42,8 @@ Quantum Studio의 데이터베이스 스키마와 관리 방법을 설명합니�
 
 - **Java (Flyway)**: `backend-java/quantum-api-service/src/main/resources/db/migration/`
   - V1~V6: users, subscriptions, payments, social_auth, refresh_token, knowledge_base
+  - V7: projects | V8: admin_users | V12: terms, user_terms_agreement
+  - V15: plan_config | V18: terms.category, required | V19: users.suspended_at
 - **Python (Alembic)**: `backend-python/alembic/versions/`
   - 001: UUID 확장 활성화 (users 테이블은 Flyway가 담당)
   - 002: avatars, garments, tryon_results (피팅 기능, 005에서 제거)
@@ -84,5 +89,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 ## 📚 관련 문서
 - [ERD 설계](./design/ERD.md)
+- [관리자 수동 작업 목록](./ADMIN_MANUAL_OPERATIONS.md)
 - [빠른 시작 가이드](../QUICK_START.md)
 - [개발 가이드](./DEVELOPMENT_GUIDE.md)

@@ -1,7 +1,7 @@
 package com.virtualtryon.service.controller;
 
 import com.virtualtryon.core.entity.Project;
-import com.virtualtryon.service.ProjectService;
+import com.virtualtryon.service.service.ProjectService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

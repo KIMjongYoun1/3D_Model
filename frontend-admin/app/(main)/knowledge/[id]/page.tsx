@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import axios from "axios";
+import { adminApi } from "@/lib/adminApi";
 import { useRequireAdminAuth } from "@/hooks/useRequireAdminAuth";
 
 interface Knowledge {
@@ -15,13 +16,6 @@ interface Knowledge {
   sourceUrl: string;
   updatedAt: string;
   createdAt?: string;
-}
-
-function getAdminAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("adminToken");
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
 }
 
 export default function KnowledgeDetailPage() {
@@ -42,9 +36,8 @@ export default function KnowledgeDetailPage() {
       try {
         setLoading(true);
         setError(null);
-        const { data } = await axios.get<Knowledge>(
-          `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/${id}`,
-          { headers: getAdminAuthHeaders() }
+        const { data } = await adminApi.get<Knowledge>(
+          `/api/admin/knowledge/${id}`
         );
         setKnowledge(data);
       } catch (e) {

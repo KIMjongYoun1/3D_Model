@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { checkAuth, logout } from '@/lib/authApi';
+import { getSafeRedirect } from '@/lib/authRedirect';
 
 const Header = () => {
   const pathname = usePathname();
@@ -44,15 +45,17 @@ const Header = () => {
   };
 
   const handleNaverLogin = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('auth_redirect', getSafeRedirect(pathname, '/studio'));
+    }
     const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
     const redirectUri = encodeURIComponent('http://localhost:3000/api/auth/callback/naver');
     const state = Math.random().toString(36).substring(7);
     const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
-    
-    // 상태값 저장 (CSRF 방지)
-    localStorage.setItem('naver_auth_state', state);
-    
-    window.location.href = naverAuthUrl;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('naver_auth_state', state);
+      window.location.href = naverAuthUrl;
+    }
   };
 
   return (

@@ -6,14 +6,8 @@ import Link from "next/link";
 import axios from "axios";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { adminApi } from "@/lib/adminApi";
 import { useRequireAdminAuth } from "@/hooks/useRequireAdminAuth";
-
-function getAdminAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("adminToken");
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
-}
 
 export default function NewTermsPage() {
   useRequireAdminAuth();
@@ -26,6 +20,9 @@ export default function NewTermsPage() {
     title: "",
     content: "",
     effectiveAt: new Date().toISOString().slice(0, 16),
+    category: "SIGNUP" as "SIGNUP" | "PAYMENT",
+    required: true,
+    isActive: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,16 +34,18 @@ export default function NewTermsPage() {
     }
     setSubmitting(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/terms`,
+        await adminApi.post(
+        "/api/admin/terms",
         {
           type: form.type,
           version: form.version,
           title: form.title.trim(),
           content: form.content,
           effectiveAt: form.effectiveAt ? form.effectiveAt : null,
-        },
-        { headers: getAdminAuthHeaders() }
+          category: form.category,
+          required: form.required,
+          isActive: form.isActive,
+        }
       );
       router.push("/terms");
     } catch (e) {
@@ -73,7 +72,7 @@ export default function NewTermsPage() {
       <h1 className="text-2xl font-black italic">새 약관 등록</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase mb-2">유형</label>
             <select
@@ -83,7 +82,44 @@ export default function NewTermsPage() {
             >
               <option value="TERMS_OF_SERVICE">TERMS_OF_SERVICE (이용약관)</option>
               <option value="PRIVACY_POLICY">PRIVACY_POLICY (개인정보처리방침)</option>
+              <option value="SUBSCRIPTION_TERMS">SUBSCRIPTION_TERMS (구독·결제 약관)</option>
+              <option value="REFUND_POLICY">REFUND_POLICY (환불 정책)</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">적용 화면</label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value as "SIGNUP" | "PAYMENT" })}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-indigo-500"
+            >
+              <option value="SIGNUP">SIGNUP (가입)</option>
+              <option value="PAYMENT">PAYMENT (결제)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">필수/선택</label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.required}
+                onChange={(e) => setForm({ ...form, required: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+              />
+              <span className="text-sm font-bold">필수 동의</span>
+            </label>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">노출</label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+              />
+              <span className="text-sm font-bold">Studio에 노출</span>
+            </label>
           </div>
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase mb-2">버전</label>

@@ -62,10 +62,15 @@ class AIAgentService:
             return None
 
     def _check_rate_limit(self) -> bool:
-        """API 호출 제한 체크 (분당 14회 제한)"""
+        """Gemini API 호출 제한 체크 (분당 14회). 소진 시 False → Ollama 폴백"""
         current_time = time.time()
         self.request_history = [t for t in self.request_history if current_time - t < 60]
         return len(self.request_history) < 14
+
+    def _is_quota_exhausted(self, e: Exception) -> bool:
+        """Gemini 할당량/쿼터 소진 에러 여부 (429, 403 등)"""
+        msg = str(e).lower()
+        return "429" in msg or "quota" in msg or "resource exhausted" in msg or "rate limit" in msg
 
     async def analyze_document(self, text: str, db: Optional[Session] = None, service_db: Optional[Session] = None, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -115,6 +120,97 @@ class AIAgentService:
         result["rag_applied"] = len(knowledge_items) > 0
         return result
 
+    async def analyze_structured_table(
+        self,
+        parsed_table: List[Dict[str, Any]],
+        db: Optional[Session] = None,
+        service_db: Optional[Session] = None,
+        options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        파싱된 테이블 데이터를 AI가 분석 (요약, 키워드, 관계 추출).
+        시각화는 파서 결과를 사용하고, AI는 인사이트 보강용.
+        """
+        # 구조화된 데이터를 JSON 문자열로 (상위 30행만, 토큰 절약)
+        sample = parsed_table[:30] if len(parsed_table) > 30 else parsed_table
+        data_str = json.dumps(sample, ensure_ascii=False, indent=2)
+        
+        options = options or {}
+        main_cat = options.get("main_category")
+        sub_cat = options.get("sub_category")
+        category = f"{main_cat}_{sub_cat}" if (main_cat and sub_cat) else "GENERAL_DOC"
+        cat_info = CATEGORIES.get(category, CATEGORIES["GENERAL_DOC"])
+        
+        knowledge_context = ""
+        if service_db and main_cat:
+            knowledge_items = service_db.query(KnowledgeBase).filter(
+                KnowledgeBase.category.like(f"{main_cat}%"),
+                KnowledgeBase.is_active == True
+            ).order_by(KnowledgeBase.updated_at.desc()).limit(3).all()
+            if knowledge_items:
+                knowledge_context = "\n[참고 지식]\n" + "\n".join(f"- {k.title}: {k.content[:200]}" for k in knowledge_items)
+        
+        prompt = f"""다음은 이미 구조화된 테이블 데이터입니다. 파싱은 완료되었으므로, 데이터를 분석하여 인사이트를 추출하세요.
+
+[출력 형식] JSON만 출력:
+{{
+    "summary": "데이터의 핵심 요약 (한국어, 1~2문장)",
+    "keywords": [{{"term": "핵심 키워드", "value": "대표값", "definition": "해석", "importance": 1-10}}],
+    "relations": [{{"source": "항목A", "target": "항목B", "label": "관계", "strength": 1-10}}]
+}}
+
+{knowledge_context}
+
+[구조화된 테이블 데이터]
+{data_str[:3000]}
+"""
+        try:
+            # 1. Gemini 우선. 한도 소진 시 Ollama 폴백
+            if not self.cloud_available:
+                print("⚠️ Gemini API 키 미설정 → Ollama로 전환합니다.")
+            elif not self._check_rate_limit():
+                print("⚠️ Gemini 호출 한도 소진 (분당 14회) → Ollama로 전환합니다.")
+            if self.cloud_available and self._check_rate_limit():
+                try:
+                    self.request_history.append(time.time())
+                    model_name = "gemini-2.5-flash"
+                    response = self.client.models.generate_content(model=model_name, contents=prompt)
+                    if response and response.text:
+                        result = self._parse_json(response.text)
+                        result["detected_category"] = category
+                        result["model_tier"] = "flash"
+                        result["suggested_render"] = "settlement"
+                        return result
+                except Exception as e:
+                    if self._is_quota_exhausted(e):
+                        print(f"⚠️ Gemini 호출 한도 소진 → Ollama로 전환합니다.")
+                    else:
+                        print(f"⚠️ Gemini 실패: {e}. Ollama로 전환합니다.")
+            # 2. Ollama 폴백 (Gemini 실패/미설정 시)
+            if cat_info.tier in [ModelTier.FLASH, ModelTier.PRO]:
+                result = await self._call_ollama("llama3.2", prompt)
+                if result and (result.get("summary") or result.get("keywords")):
+                    result["detected_category"] = category
+                    result["model_tier"] = cat_info.tier.value
+                    result["suggested_render"] = "settlement"
+                    return result
+            # 3. TinyLlama 최후 수단
+            result = await self._run_local_model(prompt)
+            result["detected_category"] = category
+            result["model_tier"] = "local"
+            result["suggested_render"] = "settlement"
+            return result
+        except Exception as e:
+            print(f"⚠️ 구조화 테이블 AI 분석 실패: {e}")
+            return {
+                "summary": f"테이블 ({len(parsed_table)}행) — AI 분석 없이 시각화",
+                "keywords": [],
+                "relations": [],
+                "detected_category": category,
+                "model_tier": "none",
+                "suggested_render": "settlement"
+            }
+
     async def _call_ai_with_tier(self, text: str, category: str, knowledge: str, options: Dict[str, Any]) -> Dict[str, Any]:
         """카테고리 티어에 따른 모델 호출 분기"""
         cat_info = CATEGORIES[category]
@@ -124,15 +220,13 @@ class AIAgentService:
         # 프롬프트 구성
         prompt = self._build_specialized_prompt(text, category, knowledge, render_type)
 
-        # 1. 보안 및 비용 절감을 위해 고성능 로컬 모델(Llama 3.2) 우선 시도 (Ollama)
-        if cat_info.tier in [ModelTier.FLASH, ModelTier.PRO]:
-            ollama_result = await self._call_ollama("llama3.2", prompt)
-            if ollama_result and ollama_result.get("keywords"):
-                return ollama_result
-
-        # 2. Cloud (Gemini) - Ollama 실패 시 또는 특정 티어에서 사용
-        if self.cloud_available and self._check_rate_limit():
-            model_name = "gemini-1.5-pro-latest" if cat_info.tier == ModelTier.PRO else "gemini-1.5-flash-latest"
+        # 1. Gemini 우선 (API 키 있으면). 한도 소진 시 Ollama 폴백
+        if not self.cloud_available:
+            print("⚠️ Gemini API 키 미설정 → Ollama로 전환합니다.")
+        elif not self._check_rate_limit():
+            print("⚠️ Gemini 호출 한도 소진 (분당 14회) → Ollama로 전환합니다.")
+        elif self.cloud_available and self._check_rate_limit():
+            model_name = "gemini-2.5-pro" if cat_info.tier == ModelTier.PRO else "gemini-2.5-flash"
             print(f"🚀 [Mode: Cloud] Requesting {model_name} for category {category}...")
             
             try:
@@ -148,9 +242,18 @@ class AIAgentService:
                 if response and response.text:
                     return self._parse_json(response.text)
             except Exception as e:
-                print(f"⚠️ Cloud API 실패: {e}. 로컬 모델로 전환합니다.")
+                if self._is_quota_exhausted(e):
+                    print(f"⚠️ Gemini 호출 한도 소진 → Ollama로 전환합니다.")
+                else:
+                    print(f"⚠️ Cloud API 실패: {e}. Ollama로 전환합니다.")
         
-        # 3. 최후의 수단: 초경량 로컬 모델 (TinyLlama - Transformers)
+        # 2. Ollama 폴백 (Gemini 실패/미설정 시)
+        if cat_info.tier in [ModelTier.FLASH, ModelTier.PRO]:
+            ollama_result = await self._call_ollama("llama3.2", prompt)
+            if ollama_result and ollama_result.get("keywords"):
+                return ollama_result
+        
+        # 3. 최후의 수단: TinyLlama (Transformers)
         return await self._run_local_model(prompt)
 
     def _build_specialized_prompt(self, text: str, category: str, knowledge: str, render_type: str) -> str:

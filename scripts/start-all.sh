@@ -9,8 +9,13 @@
 #   --tail, -t : 기동 후 로그 실시간 스트리밍 (Ctrl+C로 종료)
 #
 set -e
+# set -e: 모든 명령이 실패하면 즉시 스크립트 종료 (에러 전파)
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# 스크립트 위치 기준으로 프로젝트 루트 경로 계산 (scripts/start-all.sh → 3D_Model/)
+
 cd "$ROOT"
+# 작업 디렉터리를 프로젝트 루트로 이동
 
 TAIL_LOGS=false
 for arg in "$@"; do
@@ -18,22 +23,34 @@ for arg in "$@"; do
     --tail|-t) TAIL_LOGS=true ;;
   esac
 done
+# --tail 또는 -t 인수면 기동 후 로그 실시간 스트리밍 모드 활성화
+
 RUN_DIR="$ROOT/.run"
 PID_FILE="$RUN_DIR/pids"
 LOG_DIR="$RUN_DIR/logs"
+# .run/: 실행 중 PID·로그 저장 디렉터리
+# pids: 프로세스 ID 목록 (stop-all.sh에서 종료 시 사용)
+# logs/: 서비스별 로그 파일
+
 mkdir -p "$RUN_DIR" "$LOG_DIR"
+# .run/, .run/logs/ 디렉터리 생성 (없으면)
+
 touch "$LOG_DIR"/service.log "$LOG_DIR"/admin.log "$LOG_DIR"/python-ai.log "$LOG_DIR"/admin-ai.log "$LOG_DIR"/studio-fe.log "$LOG_DIR"/admin-fe.log 2>/dev/null || true
+# 각 서비스 로그 파일 미리 생성 (없으면). tail -f 시 에러 방지. 2>/dev/null: touch 실패 시 무시
 
 # 실행 시각 (로그 파일명·요약에 사용)
 STARTED_AT=$(date '+%Y-%m-%d %H:%M:%S')
 RUN_LOG="$LOG_DIR/start-all.log"
+# 이번 실행의 요약 로그 파일 경로
 
 log_run() {
   echo "$1" | tee -a "$RUN_LOG"
 }
+# tee -a: 콘솔 출력 + RUN_LOG 파일에 추가
 
 # 기동 run 로그 초기화 (이번 실행만)
 echo "=== start-all.sh $STARTED_AT (ROOT=$ROOT) ===" > "$RUN_LOG"
+# > : 덮어쓰기. 이전 실행 기록 초기화
 
 echo "=== Quantum Studio 전체 기동 (루트: $ROOT) ==="
 log_run "시작 시각: $STARTED_AT"
@@ -56,19 +73,26 @@ wait_for_port() {
   done
   return 1
 }
+# nc -z: 포트 열림 여부 확인. curl: HTTP로 404 등도 응답이면 포트 열림으로 간주
+# 2초마다 체크, max초 동안 대기. Java 서비스는 기동이 느려서 사용
 
 # 포트가 열렸는지만 확인 (대기 없음)
 check_port() {
   (nc -z 127.0.0.1 "$1" 2>/dev/null) || (curl -s -o /dev/null "http://127.0.0.1:$1/" 2>/dev/null)
 }
+# Python/Node는 2초 내 기동 가능하므로 대기 없이 한 번만 확인
 
 save_pid() {
   echo "$1" >> "$PID_FILE"
 }
+# 백그라운드 프로세스 PID를 $PID_FILE에 추가 (stop-all.sh에서 kill 시 사용)
 
 : > "$PID_FILE"
+# : (빈 명령): true와 동일. > "$PID_FILE"로 파일 내용 비우기 (이전 PID 초기화)
 
 S1=0 S2=0 S3=0 S4=0 S5=0 S6=0
+# 각 서비스 기동 성공 여부: 1=성공, 0=실패
+# S1=Service WAS, S2=Admin WAS, S3=Python AI, S4=Admin AI, S5=Studio FE, S6=Admin FE
 
 # 0) Java 멀티 모듈 선빌드 (quantum-core → service, admin 의존성 해결)
 log_run "[0/6] Java 백엔드 빌드 중..."
@@ -81,6 +105,9 @@ else
   exit 1
 fi
 log_run ""
+# mvnw: Maven Wrapper. clean install: 기존 빌드 삭제 후 전체 빌드
+# -DskipTests: 테스트 제외 (빌드 속도). >> build.log: 출력을 로그 파일로 리다이렉트
+# 2>&1: stderr를 stdout으로 합쳐서 함께 리다이렉트
 
 # 1) Java Service WAS (:8080)
 log_run "[1/6] Java Service WAS (8080) 기동 중..."
@@ -94,6 +121,9 @@ else
   log_run "    → Java만 직접 기동: ./scripts/start-one.sh service"
 fi
 log_run ""
+# ( ... ) &: 서브셸에서 실행 + 백그라운드(&). $!: 방금 실행한 프로세스의 PID
+# spring-boot:run: Maven 플러그인으로 Spring Boot 앱 실행
+# wait_for_port 8080 ... 120: 8080 포트가 열릴 때까지 최대 120초 대기
 
 # 2) Java Admin WAS (:8081)
 log_run "[2/6] Java Admin WAS (8081) 기동 중..."
@@ -114,6 +144,9 @@ for pyproj in backend-python backend-admin-ai; do
   fi
 done
 log_run ""
+# venv: Python 가상환경. venv/bin/python 없고 requirements.txt 있으면 venv 생성
+# python3 -m venv venv: venv 디렉터리에 가상환경 생성
+# pip install -r requirements.txt -q: 의존성 설치 (-q: quiet, 출력 최소화)
 
 # 3) Python AI Engine (:8000)
 log_run "[3/6] Python AI Engine (8000) 기동 중..."
@@ -127,6 +160,8 @@ save_pid $!
 sleep 15
 if check_port 8000; then S3=1; log_run "  [성공] Python AI Engine (8000)"; else log_run "  [실패] Python AI (8000) - 로그: $LOG_DIR/python-ai.log"; fi
 log_run ""
+# uvicorn: FastAPI ASGI 서버. app.main:app: FastAPI 앱 인스턴스
+# --host 0.0.0.0: 외부 접속 허용. sleep 15: Python 기동 대기 시간
 
 # 4) Admin AI Server (:8002)
 log_run "[4/6] Admin AI Server (8002) 기동 중..."
@@ -141,6 +176,15 @@ sleep 10
 if check_port 8002; then S4=1; log_run "  [성공] Admin AI Server (8002)"; else log_run "  [실패] Admin AI (8002) - venv 생성: cd backend-admin-ai && python3 -m venv venv && pip install -r requirements.txt"; fi
 log_run ""
 
+# 4.5) Frontend npm install (recharts 등 새 의존성 반영)
+for fe in frontend-studio frontend-admin; do
+  if [ -f "$ROOT/$fe/package.json" ]; then
+    log_run "[npm] $fe 의존성 설치 중..."
+    (cd "$ROOT/$fe" && npm install >> "$LOG_DIR/npm-$fe.log" 2>&1) && log_run "  [완료] $fe" || log_run "  [경고] $fe npm install 실패 - 기존 node_modules 사용"
+  fi
+done
+log_run ""
+
 # 5) Studio Frontend (:3000)
 log_run "[5/6] Studio Frontend (3000) 기동 중..."
 (cd "$ROOT/frontend-studio" && npm run dev >> "$LOG_DIR/studio-fe.log" 2>&1) &
@@ -148,6 +192,7 @@ save_pid $!
 sleep 8
 if check_port 3000; then S5=1; log_run "  [성공] Studio Frontend (3000)"; else log_run "  [실패] Studio FE (3000) - 로그: $LOG_DIR/studio-fe.log"; fi
 log_run ""
+# npm run dev: Next.js 개발 서버. sleep 8: Node 기동 대기
 
 # 6) Admin Frontend (:3001)
 log_run "[6/6] Admin Frontend (3001) 기동 중..."
@@ -183,3 +228,5 @@ if [ "$TAIL_LOGS" = true ]; then
   sleep 2
   tail -f "$LOG_DIR"/service.log "$LOG_DIR"/admin.log "$LOG_DIR"/python-ai.log "$LOG_DIR"/admin-ai.log "$LOG_DIR"/studio-fe.log "$LOG_DIR"/admin-fe.log 2>/dev/null || true
 fi
+# tail -f: 파일 끝을 실시간으로 출력 (추가되는 로그 계속 표시)
+# --tail 옵션으로 실행 시 기동 후 모든 서비스 로그를 한 화면에 스트리밍

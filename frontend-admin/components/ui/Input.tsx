@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number' | 'textarea';
+  type?: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'datetime-local';
   label?: string;
   placeholder?: string;
   value?: string;

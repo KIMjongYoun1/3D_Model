@@ -63,7 +63,7 @@ public class AdminSecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/admin/auth/**").permitAll()  // Admin 로그인/등록 허용
+                .requestMatchers("/api/admin/auth/**").permitAll()  // Admin 로그인/등록/로그아웃 허용
                 .requestMatchers("/health").permitAll()              // 헬스 체크 허용
                 .anyRequest().authenticated()                        // 나머지는 Admin JWT 인증 필요
             )

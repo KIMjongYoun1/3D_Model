@@ -76,6 +76,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()  // 인증 API는 허용
                 .requestMatchers("/api/v1/terms/**").permitAll()  // 약관 조회는 공개
+                .requestMatchers("/api/v1/plans/**").permitAll()  // 플랜 목록 공개 (결제 페이지용)
                 .requestMatchers("/health").permitAll()          // 헬스 체크 허용
                 .anyRequest().authenticated()                    // 나머지는 인증 필요
             )

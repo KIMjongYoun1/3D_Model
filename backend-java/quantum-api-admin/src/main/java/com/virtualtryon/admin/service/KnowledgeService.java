@@ -20,6 +20,7 @@ public class KnowledgeService {
         this.knowledgeRepository = knowledgeRepository;
     }
 
+    /** 지식 데이터 등록 */
     @Transactional
     @SuppressWarnings("null")
     public Knowledge createKnowledge(String category, String title, String content, String sourceUrl) {
@@ -37,11 +38,13 @@ public class KnowledgeService {
         return knowledgeRepository.save(knowledge);
     }
 
+    /** 활성 지식 전체 목록 (수정일 내림차순) */
     @Transactional(readOnly = true)
     public List<Knowledge> getAllActiveKnowledge() {
         return knowledgeRepository.findByIsActiveTrueOrderByUpdatedAtDesc();
     }
 
+    /** 지식 검색 (카테고리·키워드, 페이징) */
     @Transactional(readOnly = true)
     public Page<Knowledge> searchKnowledge(List<String> categories, String q, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 100));
@@ -51,11 +54,13 @@ public class KnowledgeService {
         return knowledgeRepository.searchActiveByCategoriesAndQuery(categories, q != null ? q.trim() : "", pageable);
     }
 
+    /** 카테고리 목록 조회 (중복 제거) */
     @Transactional(readOnly = true)
     public List<String> getDistinctCategories() {
         return knowledgeRepository.findDistinctCategories();
     }
 
+    /** 지식 단건 조회 */
     @Transactional(readOnly = true)
     public Knowledge getKnowledgeById(UUID id) {
         if (id == null) {
@@ -65,11 +70,13 @@ public class KnowledgeService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 지식을 찾을 수 없습니다."));
     }
 
+    /** 카테고리별 지식 목록 조회 */
     @Transactional(readOnly = true)
     public List<Knowledge> getKnowledgeByCategory(String category) {
         return knowledgeRepository.findByCategoryAndIsActiveTrueOrderByUpdatedAtDesc(category);
     }
 
+    /** 지식 삭제 */
     @Transactional
     public void deleteKnowledge(UUID id) {
         if (id == null) {

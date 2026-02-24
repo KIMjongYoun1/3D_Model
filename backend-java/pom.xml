@@ -20,6 +20,7 @@
 
     <modules>
         <module>quantum-core</module>
+        <module>quantum-payment-mock</module>
         <module>quantum-api-service</module>
         <module>quantum-api-admin</module>
     </modules>
@@ -37,6 +38,11 @@
             <dependency>
                 <groupId>com.virtualtryon</groupId>
                 <artifactId>quantum-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.virtualtryon</groupId>
+                <artifactId>quantum-payment-mock</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Flyway -->

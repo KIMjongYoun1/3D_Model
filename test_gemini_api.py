@@ -21,7 +21,7 @@ def test_gemini():
         
         # 간단한 텍스트 생성 테스트 (확인된 작동 모델: gemini-flash-latest)
         response = client.models.generate_content(
-            model="gemini-flash-latest",
+            model="gemini-2.5-flash",
             contents="이 메시지가 보인다면 'API 연결 성공'이라고 답해줘."
         )
         
@@ -40,7 +40,7 @@ def test_gemini():
         if "403" in str(e):
             print("- API 키의 권한을 확인하세요. (API restricted?)")
         elif "404" in str(e):
-            print("- 모델 이름(gemini-1.5-flash)이 정확한지 확인하세요.")
+            print("- 모델 이름(gemini-2.5-flash)이 정확한지 확인하세요.")
         elif "API key not valid" in str(e):
             print("- API 키가 올바른지 다시 확인하세요.")
 

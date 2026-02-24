@@ -8,7 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.virtualtryon.service", "com.virtualtryon.core"})
+@ComponentScan(basePackages = {"com.virtualtryon.service", "com.virtualtryon.core", "com.virtualtryon.payment.mock"})
 @EntityScan(basePackages = "com.virtualtryon.core.entity")
 @EnableJpaRepositories(basePackages = "com.virtualtryon.core.repository")
 public class ServiceApplication {

@@ -5,11 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { checkAuth, AuthUser } from "@/lib/authApi";
+import { getMyPayments, cancelMySubscription, PaymentHistoryItem } from "@/lib/paymentApi";
+import { fetchPlans } from "@/lib/plansApi";
 
 export default function MyPage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
+  const [cancelling, setCancelling] = useState(false);
+  const [planFeatures, setPlanFeatures] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuth().then(u => {
@@ -22,13 +27,53 @@ export default function MyPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      getMyPayments().then(setPayments).catch(() => setPayments([]));
+    }
+  }, [isLoggedIn, user?.id]);
+
+  useEffect(() => {
+    if (!user?.subscription) {
+      setPlanFeatures(["기본 3D 시각화", "AI 분석 월 10회", "데이터 7일 보관"]);
+      return;
+    }
+    fetchPlans()
+      .then((plans) => {
+        const plan = plans.find((p) => p.planCode.toLowerCase() === user.subscription?.toLowerCase());
+        setPlanFeatures(plan?.features?.length ? plan.features : ["기본 3D 시각화", "AI 분석 월 10회"]);
+      })
+      .catch(() => setPlanFeatures(["기본 3D 시각화", "AI 분석 월 10회"]));
+  }, [user?.subscription]);
+
+  const handleCancelSubscription = async () => {
+    if (!confirm("구독을 해지하시겠습니까? 당월 말일까지 이용 가능하며, 이후 자동 갱신이 중단됩니다.")) return;
+    setCancelling(true);
+    try {
+      await cancelMySubscription();
+      alert("구독 해지가 완료되었습니다. 당월 말일까지 이용 가능합니다.");
+      checkAuth().then(setUser);
+    } catch (e: unknown) {
+      const res = e && typeof e === "object" && "response" in e ? (e as { response?: { data?: Record<string, string> } }).response?.data : null;
+      const msg = res?.message || res?.error || null;
+      alert(msg || "구독 해지에 실패했습니다. 활성 구독이 있는지 확인해 주세요.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const handleNaverLogin = () => {
+    const state = Math.random().toString(36).substring(7);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('auth_redirect', '/mypage');
+      localStorage.setItem('naver_auth_state', state);
+    }
     const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
     const redirectUri = encodeURIComponent('http://localhost:3000/api/auth/callback/naver');
-    const state = Math.random().toString(36).substring(7);
     const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
-    localStorage.setItem('naver_auth_state', state);
-    window.location.href = naverAuthUrl;
+    if (typeof window !== 'undefined') {
+      window.location.href = naverAuthUrl;
+    }
   };
 
   const renderProviderBadge = () => {
@@ -128,7 +173,7 @@ export default function MyPage() {
             <div className="flex-1 space-y-8 w-full">
               <div className="flex items-center gap-6">
                 <div className="w-24 h-24 bg-blue-100 rounded-[2.5rem] flex items-center justify-center text-4xl font-black text-blue-600 italic border-4 border-white shadow-xl">
-                  {user.name.charAt(0) || 'Q'}
+                  {user?.name?.charAt(0) || 'Q'}
                 </div>
                 <div className="space-y-1">
                   <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">User <span className="text-blue-600">Account</span></h2>
@@ -160,55 +205,98 @@ export default function MyPage() {
               <div className="bg-blue-50/50 p-8 rounded-[3rem] border border-blue-100 text-center relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
                 <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Active Plan</span>
-                <h3 className="text-4xl font-black text-blue-900 mt-2 italic tracking-tighter">Free Plan</h3>
+                <h3 className="text-4xl font-black text-blue-900 mt-2 italic tracking-tighter">
+                  {user?.subscriptionPlanName || "Free Plan"}
+                </h3>
+                {user?.subscriptionStatus === "active" && (
+                  <span className="inline-block mt-2 px-4 py-1.5 text-[9px] font-black rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 tracking-widest uppercase">
+                    정상
+                  </span>
+                )}
+                {user?.subscriptionStatus === "cancelled" && (
+                  <span className="inline-block mt-2 px-4 py-1.5 text-[9px] font-black rounded-full bg-amber-50 text-amber-600 border border-amber-100 tracking-widest">
+                    해지 신청됨 (만료일까지 이용 가능)
+                  </span>
+                )}
+                {user?.subscriptionExpiresAt && (
+                  <p className="text-xs font-bold text-blue-600 mt-2">
+                    ~ {new Date(user.subscriptionExpiresAt).toLocaleDateString("ko-KR")} 까지
+                  </p>
+                )}
               </div>
               
               <div className="space-y-6">
                 <ul className="space-y-4 px-2">
-                  <li className="flex items-center gap-3 text-[13px] font-semibold text-slate-600">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    기본 3D 매핑 지원
-                  </li>
-                  <li className="flex items-center gap-3 text-[13px] font-semibold text-slate-600">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  AI 분석 월 10회
-                </li>
-              </ul>
-              <Button 
-                variant="primary" 
-                className="w-full py-4 text-[11px] shadow-blue-200"
-                onClick={() => router.push('/payment')}
-              >
-                플랜 업그레이드
-              </Button>
+                  {planFeatures.map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-[13px] font-semibold text-slate-600">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              <div className="space-y-3">
+                <Button 
+                  variant="primary" 
+                  className="w-full py-4 text-[11px] shadow-blue-200"
+                  onClick={() => router.push('/payment')}
+                >
+                  플랜 업그레이드
+                </Button>
+                {(user?.subscription && user.subscription !== "free" && user?.subscriptionStatus !== "cancelled") && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full py-3 text-[11px] text-slate-600 border-slate-200"
+                    onClick={handleCancelSubscription}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? "처리 중..." : "구독 해지 신청"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </Card>
 
-        {/* Recent Activity Section */}
-        <Card variant="glass" title="Recent Activity" subtitle="최근 분석 히스토리" className="p-10">
+        {/* 결제 이력 Section */}
+        <Card variant="glass" title="결제 이력" subtitle="최근 결제 내역" className="p-10">
           <div className="mt-8 overflow-hidden rounded-[2rem] border border-slate-100 bg-white/30">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                 <tr>
-                  <th className="px-6 py-4">Data Name</th>
-                  <th className="px-6 py-4">Type</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">플랜</th>
+                  <th className="px-6 py-4">금액</th>
+                  <th className="px-6 py-4">결제일</th>
+                  <th className="px-6 py-4">상태</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {[1, 2, 3].map((i) => (
-                  <tr key={i} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-6 py-5 font-black text-slate-800 italic tracking-tight">Analysis_Project_00{i}</td>
-                    <td className="px-6 py-5 text-slate-500 font-bold text-[11px] tracking-wider">JSON_STRUCTURE</td>
-                    <td className="px-6 py-5 text-slate-400 font-medium font-mono text-[11px]">2026.01.2{i}</td>
-                    <td className="px-6 py-5">
-                      <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-100 tracking-widest">COMPLETED</span>
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500 font-medium">
+                      결제 이력이 없습니다.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  payments.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-6 py-5 font-black text-slate-800 italic tracking-tight">{p.planId || "-"}</td>
+                      <td className="px-6 py-5 text-slate-600 font-bold">{p.amount?.toLocaleString()}원</td>
+                      <td className="px-6 py-5 text-slate-400 font-medium font-mono text-[11px]">
+                        {p.completedAt ? new Date(p.completedAt).toLocaleDateString("ko-KR") : p.createdAt ? new Date(p.createdAt).toLocaleDateString("ko-KR") : "-"}
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`px-4 py-1.5 text-[9px] font-black rounded-full border tracking-widest ${
+                          p.status === "completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                          p.status === "failed" ? "bg-red-50 text-red-600 border-red-100" :
+                          "bg-slate-50 text-slate-600 border-slate-100"
+                        }`}>
+                          {p.status?.toUpperCase() || "PENDING"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

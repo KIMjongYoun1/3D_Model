@@ -1,10 +1,18 @@
 package com.virtualtryon.service.controller;
 
 import com.virtualtryon.core.config.AuthCookieHelper;
-import com.virtualtryon.core.dto.*;
+import com.virtualtryon.core.dto.auth.LoginRequest;
+import com.virtualtryon.core.dto.auth.LoginResponse;
+import com.virtualtryon.core.dto.auth.NaverCallbackResponse;
+import com.virtualtryon.core.dto.auth.RegisterRequest;
+import com.virtualtryon.core.dto.auth.UserResponse;
+import com.virtualtryon.core.dto.terms.TermsAgreeRequest;
+import com.virtualtryon.core.entity.Subscription;
 import com.virtualtryon.core.entity.User;
-import com.virtualtryon.service.AuthService;
-import com.virtualtryon.service.NaverAuthService;
+import com.virtualtryon.core.repository.PlanConfigRepository;
+import com.virtualtryon.core.repository.SubscriptionRepository;
+import com.virtualtryon.service.service.AuthService;
+import com.virtualtryon.service.service.NaverAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -13,8 +21,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,11 +39,16 @@ public class AuthController {
     private final AuthService authService;
     private final NaverAuthService naverAuthService;
     private final AuthCookieHelper cookieHelper;
+    private final SubscriptionRepository subscriptionRepository;
+    private final PlanConfigRepository planConfigRepository;
 
-    public AuthController(AuthService authService, NaverAuthService naverAuthService, AuthCookieHelper cookieHelper) {
+    public AuthController(AuthService authService, NaverAuthService naverAuthService, AuthCookieHelper cookieHelper,
+                          SubscriptionRepository subscriptionRepository, PlanConfigRepository planConfigRepository) {
         this.authService = authService;
         this.naverAuthService = naverAuthService;
         this.cookieHelper = cookieHelper;
+        this.subscriptionRepository = subscriptionRepository;
+        this.planConfigRepository = planConfigRepository;
     }
     
     /**
@@ -114,6 +129,7 @@ public class AuthController {
         }
     }
 
+    /** 이메일/비밀번호 로그인. JWT를 HttpOnly 쿠키로 반환 */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
@@ -165,6 +181,7 @@ public class AuthController {
         return builder.build();
     }
     
+    /** 회원가입. 이메일 중복 시 400 */
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -174,12 +191,19 @@ public class AuthController {
                     request.getName()
             );
             
+            String planCode = user.getSubscription() != null ? user.getSubscription() : "free";
+            String planName = planConfigRepository.findByPlanCode(planCode)
+                    .map(pc -> pc.getPlanName() != null ? pc.getPlanName() : planCode)
+                    .orElse(planCode);
             UserResponse response = UserResponse.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .name(user.getName())
                     .profileImage(user.getProfileImage())
-                    .subscription(user.getSubscription())
+                    .subscription(planCode)
+                    .subscriptionPlanName(planName)
+                    .subscriptionExpiresAt(null)
+                    .subscriptionStatus(null)
                     .createdAt(user.getCreatedAt())
                     .provider(user.getProvider())
                     .build();
@@ -190,6 +214,7 @@ public class AuthController {
         }
     }
     
+    /** 현재 로그인 사용자 정보 조회 */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal Object principal) {
         if (principal == null || !(principal instanceof UUID)) {
@@ -198,12 +223,46 @@ public class AuthController {
         try {
             UUID userId = (UUID) principal;
             User user = authService.getUserById(userId);
+            if (user.getSuspendedAt() != null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            String planCode = user.getSubscription() != null ? user.getSubscription() : "free";
+            LocalDateTime expiresAt = null;
+            String subscriptionStatus = null;
+
+            Optional<Subscription> activeSub = subscriptionRepository.findFirstByUserIdAndStatusOrderByExpiresAtDesc(userId, "active");
+            if (activeSub.isPresent()) {
+                Subscription sub = activeSub.get();
+                planCode = sub.getPlanType();
+                expiresAt = sub.getExpiresAt();
+                subscriptionStatus = "active";
+            } else {
+                Optional<Subscription> cancelledSub = subscriptionRepository.findFirstByUserIdAndStatusOrderByExpiresAtDesc(userId, "cancelled");
+                if (cancelledSub.isPresent()) {
+                    Subscription sub = cancelledSub.get();
+                    LocalDateTime subExp = sub.getExpiresAt();
+                    if (subExp != null && LocalDateTime.now().isBefore(subExp)) {
+                        planCode = sub.getPlanType();
+                        expiresAt = subExp;
+                        subscriptionStatus = "cancelled";
+                    }
+                }
+            }
+
+            final String resolvedPlanCode = planCode;
+            String planName = planConfigRepository.findByPlanCode(resolvedPlanCode)
+                    .map(pc -> pc.getPlanName() != null ? pc.getPlanName() : resolvedPlanCode)
+                    .orElse(resolvedPlanCode);
+
             return ResponseEntity.ok(UserResponse.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .name(user.getName())
                     .profileImage(user.getProfileImage())
-                    .subscription(user.getSubscription() != null ? user.getSubscription() : "free")
+                    .subscription(resolvedPlanCode)
+                    .subscriptionPlanName(planName)
+                    .subscriptionExpiresAt(expiresAt)
+                    .subscriptionStatus(subscriptionStatus)
                     .createdAt(user.getCreatedAt())
                     .provider(user.getProvider() != null ? user.getProvider() : "LOCAL")
                     .build());

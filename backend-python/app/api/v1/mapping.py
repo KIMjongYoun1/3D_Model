@@ -12,6 +12,7 @@ from uuid import UUID
 import json
 
 from app.core.database import get_db, get_service_db
+from app.core.url_sanitizer import sanitize_mapping_result
 from app.schemas.mapping import MappingCreate, MappingResponse
 from app.models.mapping import MappingData
 from app.services.mapping_service import mapping_orchestrator
@@ -118,4 +119,8 @@ async def create_mapping_from_file(
 
 @router.get("", response_model=List[MappingResponse])
 def list_mappings(db: Session = Depends(get_db)):
-    return db.query(MappingData).filter(MappingData.user_id == FAKE_USER_ID).order_by(MappingData.created_at.desc()).all()
+    mappings = db.query(MappingData).filter(MappingData.user_id == FAKE_USER_ID).order_by(MappingData.created_at.desc()).all()
+    for m in mappings:
+        if m.mapping_data:
+            m.mapping_data = sanitize_mapping_result(m.mapping_data)
+    return mappings

@@ -58,8 +58,21 @@ Quantum Studio는 비정형 데이터를 3D 공간에 지능적으로 도식화�
 
 ---
 
+## 📋 최근 업데이트 (2026-02-24)
+- Admin 운영 기능: 회원/거래/구독/플랜/약관 관리, 매출 대시보드
+- 회원 정지(`suspended_at`), 소프트 삭제(`deleted_at`)
+- 결제 시 약관 동의(agreedTermIds), category(SIGNUP/PAYMENT)
+- **인증**: 소셜 로그인(네이버) 전용. 이메일/회원가입 제거
+- **결제 플로우**: 비로그인 결제 시도 → `/login?redirect=/payment` 리다이렉트
+- **보안**: Open Redirect 방지(authRedirect), References URL 검증(safeUrl, url_sanitizer)
+
+---
+
 ## 🔗 관련 문서
+- [보안 가이드](./SECURITY.md)
 - [빠른 시작 가이드](../QUICK_START.md)
 - [개발 가이드](./DEVELOPMENT_GUIDE.md)
+- [API 명세서](./API_SPECIFICATION.md)
+- [관리자 수동 작업 목록](./ADMIN_MANUAL_OPERATIONS.md)
 - [디자인 시스템](./FRONTEND_DESIGN_SYSTEM.md)
 - [소셜 로그인 가이드](./SOCIAL_AUTH_SETUP.md)

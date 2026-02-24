@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"app/studio/page.tsx -> @/lib/authApi\":{\"id\":\"app/studio/page.tsx -> @/lib/authApi\",\"files\":[\"static/chunks/_app-pages-browser_lib_authApi_ts.js\"]},\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\":{\"id\":\"node_modules/@react-three/drei/core/VideoTexture.js -> hls.js\",\"files\":[]},\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\":{\"id\":\"node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision\",\"files\":[]}}"

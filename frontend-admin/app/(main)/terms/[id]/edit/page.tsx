@@ -6,6 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { adminApi } from "@/lib/adminApi";
 import { useRequireAdminAuth } from "@/hooks/useRequireAdminAuth";
 
 interface TermsDetail {
@@ -15,13 +16,9 @@ interface TermsDetail {
   version: string;
   content: string;
   effectiveAt: string;
-}
-
-function getAdminAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("adminToken");
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
+  category?: string;
+  required?: boolean;
+  isActive?: boolean;
 }
 
 export default function EditTermsPage() {
@@ -40,6 +37,9 @@ export default function EditTermsPage() {
     title: "",
     content: "",
     effectiveAt: "",
+    category: "SIGNUP" as "SIGNUP" | "PAYMENT",
+    required: true,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -50,9 +50,8 @@ export default function EditTermsPage() {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get<TermsDetail>(
-          `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/terms/${id}`,
-          { headers: getAdminAuthHeaders() }
+        const { data } = await adminApi.get<TermsDetail>(
+          `/api/admin/terms/${id}`
         );
         setForm({
           type: data.type || "TERMS_OF_SERVICE",
@@ -62,6 +61,9 @@ export default function EditTermsPage() {
           effectiveAt: data.effectiveAt
             ? new Date(data.effectiveAt).toISOString().slice(0, 16)
             : new Date().toISOString().slice(0, 16),
+          category: (data.category === "PAYMENT" ? "PAYMENT" : "SIGNUP") as "SIGNUP" | "PAYMENT",
+          required: data.required !== false,
+          isActive: data.isActive !== false,
         });
       } catch (e) {
         setLoadError(axios.isAxiosError(e) && e.response?.data?.error
@@ -84,16 +86,18 @@ export default function EditTermsPage() {
     }
     setSubmitting(true);
     try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/terms/${id}`,
+        await adminApi.put(
+        `/api/admin/terms/${id}`,
         {
           type: form.type,
           version: form.version,
           title: form.title.trim(),
           content: form.content,
           effectiveAt: form.effectiveAt ? form.effectiveAt : null,
-        },
-        { headers: getAdminAuthHeaders() }
+          category: form.category,
+          required: form.required,
+          isActive: form.isActive,
+        }
       );
       router.push("/terms");
     } catch (e) {
@@ -136,13 +140,40 @@ export default function EditTermsPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-black italic">약관 편집</h1>
-      <p className="text-slate-500 text-sm">
-        저장하면 Studio 동의 화면에 즉시 반영됩니다. (재배포 불필요)
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black italic">약관 편집</h1>
+          <p className="text-slate-500 text-sm">
+            저장하면 Studio 동의 화면에 즉시 반영됩니다. (재배포 불필요)
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={async () => {
+            const v = prompt("새 버전 번호 (예: 2.0):");
+            if (!v?.trim()) return;
+            try {
+              await adminApi.post(`/api/admin/terms/${id}/new-version`, {
+                version: v.trim(),
+                effectiveAt: new Date().toISOString().slice(0, 16),
+              });
+              alert("새 버전이 등록되었습니다. 목록에서 확인하세요.");
+              router.push("/terms");
+            } catch (e: unknown) {
+              const msg = axios.isAxiosError(e) && e.response?.data?.error
+                ? String(e.response.data.error)
+                : "등록 실패";
+              alert(msg);
+            }
+          }}
+          className="px-4 py-2 text-sm font-bold border border-indigo-300 text-indigo-600 rounded-xl hover:bg-indigo-50"
+        >
+          + 새 버전 등록
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase mb-2">유형</label>
             <select
@@ -152,7 +183,44 @@ export default function EditTermsPage() {
             >
               <option value="TERMS_OF_SERVICE">TERMS_OF_SERVICE (이용약관)</option>
               <option value="PRIVACY_POLICY">PRIVACY_POLICY (개인정보처리방침)</option>
+              <option value="SUBSCRIPTION_TERMS">SUBSCRIPTION_TERMS (구독·결제 약관)</option>
+              <option value="REFUND_POLICY">REFUND_POLICY (환불 정책)</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">적용 화면</label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value as "SIGNUP" | "PAYMENT" })}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-indigo-500"
+            >
+              <option value="SIGNUP">SIGNUP (가입)</option>
+              <option value="PAYMENT">PAYMENT (결제)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">필수/선택</label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.required}
+                onChange={(e) => setForm({ ...form, required: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+              />
+              <span className="text-sm font-bold">필수 동의</span>
+            </label>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase mb-2">노출</label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+              />
+              <span className="text-sm font-bold">Studio에 노출</span>
+            </label>
           </div>
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase mb-2">버전</label>

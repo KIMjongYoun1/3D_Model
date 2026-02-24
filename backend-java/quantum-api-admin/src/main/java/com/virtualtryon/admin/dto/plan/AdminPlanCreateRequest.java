@@ -1,0 +1,35 @@
+package com.virtualtryon.admin.dto.plan;
+
+import java.util.List;
+
+/** 관리자 플랜 등록 요청 */
+public class AdminPlanCreateRequest {
+
+    private String planCode;
+    private String planName;
+    private Long priceMonthly;
+    private Integer tokenLimit;
+    private String description;
+    private List<String> features;
+    private Boolean isActive;
+    private Integer sortOrder;
+
+    public AdminPlanCreateRequest() {}
+
+    public String getPlanCode() { return planCode; }
+    public void setPlanCode(String planCode) { this.planCode = planCode; }
+    public String getPlanName() { return planName; }
+    public void setPlanName(String planName) { this.planName = planName; }
+    public Long getPriceMonthly() { return priceMonthly; }
+    public void setPriceMonthly(Long priceMonthly) { this.priceMonthly = priceMonthly; }
+    public Integer getTokenLimit() { return tokenLimit; }
+    public void setTokenLimit(Integer tokenLimit) { this.tokenLimit = tokenLimit; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public List<String> getFeatures() { return features; }
+    public void setFeatures(List<String> features) { this.features = features; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+}

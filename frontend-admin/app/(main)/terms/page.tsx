@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { Button } from "@/components/ui/Button";
+import { adminApi } from "@/lib/adminApi";
 import { useRequireAdminAuth } from "@/hooks/useRequireAdminAuth";
 
 interface TermsItem {
@@ -13,13 +14,9 @@ interface TermsItem {
   version: string;
   content?: string;
   effectiveAt: string;
-}
-
-function getAdminAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("adminToken");
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
+  category?: string;
+  required?: boolean;
+  isActive?: boolean;
 }
 
 export default function AdminTermsListPage() {
@@ -31,9 +28,8 @@ export default function AdminTermsListPage() {
   const fetchList = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get<TermsItem[]>(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/terms`,
-        { headers: getAdminAuthHeaders() }
+      const { data } = await adminApi.get<TermsItem[]>(
+        "/api/admin/terms"
       );
       setList(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -52,9 +48,8 @@ export default function AdminTermsListPage() {
     if (!confirm("정말 삭제하시겠습니까? Studio 동의 화면에서 이 약관이 사라집니다.")) return;
     setDeletingId(id);
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/terms/${id}`,
-        { headers: getAdminAuthHeaders() }
+      await adminApi.delete(
+        `/api/admin/terms/${id}`
       );
       fetchList();
     } catch (e) {
@@ -89,7 +84,7 @@ export default function AdminTermsListPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
           <p className="text-slate-500 font-bold">등록된 약관이 없습니다.</p>
           <p className="text-slate-400 text-sm mt-2">
-            새 약관을 등록하면 Studio 동의 화면에서 사용됩니다.
+            새 약관을 등록하면 가입/결제 화면에서 사용됩니다.
           </p>
           <Link href="/terms/new" className="inline-block mt-4">
             <Button variant="primary">+ 새 약관 등록</Button>
@@ -101,6 +96,9 @@ export default function AdminTermsListPage() {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">유형</th>
+                <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">적용</th>
+                <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">필수</th>
+                <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">노출</th>
                 <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">제목</th>
                 <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">버전</th>
                 <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">시행일</th>
@@ -113,6 +111,23 @@ export default function AdminTermsListPage() {
                   <td className="px-4 py-3">
                     <span className="text-[10px] font-black bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full uppercase">
                       {t.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-[10px] font-bold text-slate-500">
+                      {t.category === "PAYMENT" ? "결제" : "가입"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] font-bold ${t.required !== false ? "text-amber-600" : "text-slate-400"}`}>
+                      {t.required !== false ? "필수" : "선택"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${
+                      t.isActive !== false ? "bg-emerald-100 text-emerald-600" : "bg-slate-200 text-slate-500"
+                    }`}>
+                      {t.isActive !== false ? "노출" : "미노출"}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-bold">{t.title}</td>

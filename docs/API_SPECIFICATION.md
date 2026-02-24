@@ -2,7 +2,7 @@
 
 Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 백엔드의 역할에 따라 API와 내부 메소드가 분리되어 있습니다. 본 문서는 각 기능의 상세 명세와 내부 동작 원리를 기록합니다.
 
-> **최종 업데이트**: 2026-02-19 — 기능별 작동 여부·설계 이유 반영
+> **최종 업데이트**: 2026-02-24 — 플랜/약관 노출·버전, 대시보드 기간별·전월대비, 거래 날짜 필터, 구독 상태 반영
 
 ---
 
@@ -10,16 +10,21 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 
 | 구분 | 기능 | 상태 | 비고 |
 | :--- | :--- | :--- | :--- |
-| **Java Service** | 이메일 로그인/회원가입, JWT 갱신 | ✅ | |
-| | 네이버 소셜 로그인 | ✅ | |
+| **Java Service** | 네이버 소셜 로그인, JWT 갱신 | ✅ | 이메일/회원가입 없음 |
 | | 결제 시뮬레이션 | ✅ | success-rate로 시뮬레이션 |
 | | 프로젝트 CRUD | ✅ | |
 | **Java Admin** | 관리자 인증 (login/register/me) | ✅ | `admin_users` 테이블, 일반 JWT와 분리 |
+| | 회원관리 (목록/상세/정지/해제/탈퇴) | ✅ | `users.suspended_at`, `deleted_at` |
+| | 거래관리 (결제 목록/상세/취소) | ✅ | `payments` CRUD |
+| | 구독관리 (목록/상세/취소) | ✅ | `subscriptions` |
+| | 플랜관리 (목록/상세/수정) | ✅ | `plan_config` |
+| | 약관관리 (CRUD) | ✅ | `terms` category(SIGNUP/PAYMENT), required |
+| | 매출 대시보드 | ✅ | 총매출, 월별, 플랜별 통계 |
 | | 지식 베이스 CRUD, 소스별 목록/상세 | ✅ | BOK/DART/LAW 상세 테이블 지원 |
 | | BOK·DART·LAW 외부 API 수집 | ✅ | corp_code 활용 시 DART 장기 검색 가능 |
 | **Python AI (8000)** | 매핑 API (3D 변환, 업로드, 히스토리) | ✅ | MappingOrchestrator, AIAgentService |
 | **Admin AI (8002)** | Ollama/Gemini 채팅 | ✅ | Ollama 없으면 Gemini 폴백 |
-| **Frontend Studio** | 로그인·결제·마이페이지·스튜디오 | ⚠️ | 로그인 API 연동 TODO |
+| **Frontend Studio** | 로그인·결제·마이페이지·스튜디오 | ✅ | 네이버 소셜 로그인, redirect·URL 검증 |
 | **Frontend Admin** | 로그인·지식 관리·AI | ✅ | |
 
 > `✅` 동작 | `⚠️` 부분 동작 | `❌` 미구현
@@ -57,6 +62,7 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 | :--- | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/auth/register` | 이메일 회원가입 | `email, password, name` | `UserResponse` |
 | `POST` | `/api/v1/auth/login` | 이메일 로그인 | `email, password` | `LoginResponse (Tokens)` |
+| `GET` | `/api/v1/auth/me` | 현재 사용자 정보 | - | `UserResponse` (subscriptionStatus: active/cancelled/null) |
 | `GET` | `/api/v1/auth/naver/callback` | 네이버 로그인 콜백 | `code, state` | `LoginResponse (Tokens)` |
 | `POST` | `/api/v1/auth/refresh` | 토큰 갱신 | `refreshToken` | `LoginResponse (Tokens)` |
 
@@ -83,6 +89,54 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 | `POST` | `/login` | 관리자 로그인 |
 | `POST` | `/register` | 관리자 계정 생성 |
 | `GET` | `/me` | 현재 관리자 정보 |
+
+#### [회원관리] - `AdminMemberController` (`/api/admin/members`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 회원 목록 (페이징) |
+| `GET` | `/{id}` | 회원 상세 |
+| `POST` | `/{id}/suspend` | 회원 정지 (`suspended_at` 설정) |
+| `POST` | `/{id}/unsuspend` | 회원 정지 해제 |
+| `DELETE` | `/{id}` | 회원 탈퇴 처리 (소프트 삭제, `deleted_at`) |
+
+#### [거래관리] - `AdminPaymentController` (`/api/admin/payments`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 결제 목록 (페이징). `fromDate`, `toDate` (YYYY-MM-DD)로 날짜 범위 필터 |
+| `GET` | `/{id}` | 결제 상세 |
+| `GET` | `/user/{userId}` | 사용자별 결제 목록 |
+| `POST` | `/{id}/cancel` | 결제 취소 (`cancelled_at` 설정) |
+
+#### [구독관리] - `AdminSubscriptionController` (`/api/admin/subscriptions`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 구독 목록 (페이징) |
+| `GET` | `/{id}` | 구독 상세 |
+| `GET` | `/user/{userId}` | 사용자별 구독 목록 |
+| `POST` | `/{id}/cancel` | 구독 취소 (`cancelled_at`, 당월 말까지 이용) |
+
+#### [플랜관리] - `AdminPlanController` (`/api/admin/plans`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 플랜 목록 (sort_order 순) |
+| `GET` | `/{id}` | 플랜 상세 |
+| `POST` | `/` | 플랜 등록 (planCode, planName, priceMonthly 등) |
+| `PUT` | `/{id}` | 플랜 수정 (가격, 토큰 한도, 활성화 등) |
+
+#### [약관관리] - `AdminTermsController` (`/api/admin/terms`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | 약관 목록 |
+| `GET` | `/{id}` | 약관 상세 |
+| `POST` | `/` | 약관 등록 |
+| `POST` | `/{id}/new-version` | 새 버전 등록 (version, effectiveAt). 기존 약관 복사 |
+| `PUT` | `/{id}` | 약관 수정 |
+| `DELETE` | `/{id}` | 약관 삭제 |
+
+#### [매출 대시보드] - `AdminDashboardController` (`/api/admin/dashboard`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/revenue` | 총매출, 월별매출, 플랜별매출. `period=week\|month\|quarter\|half`로 기간별 당기 vs 전기 |
 
 #### [지식 베이스] - `AdminController` (`/api/admin/knowledge`)
 | Method | Endpoint | Description |
@@ -132,7 +186,13 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 - **`getProject(id)`**: 프로젝트 상세 조회
 - **`deleteProject(id)`**: 프로젝트 삭제
 
-#### Admin Services (`quantum-api-admin`) — 관리 서비스 (신규)
+#### Admin Services (`quantum-api-admin`) — 관리 서비스
+- **`AdminMemberService`**: 회원 목록/상세, 정지/해제/탈퇴. `findById`/`findByUserId` 시 `Objects.requireNonNull`로 null 안전성 보장
+- **`AdminPaymentService`**: 결제 목록/상세/취소
+- **`AdminSubscriptionService`**: 구독 목록/상세/취소
+- **`AdminPlanService`**: 플랜 목록/상세/등록/수정 (`plan_config`), 노출 토글 (`is_active`)
+- **`AdminTermsService`**: 약관 CRUD (category: SIGNUP/PAYMENT, required), 새 버전 등록, 노출 설정 (`is_active`)
+- **`AdminDashboardService`**: 매출 통계 (총/월별/플랜별), 기간별(week/month/quarter/half) 당기 vs 전기
 - **`KnowledgeService`**: 지식 베이스 항목의 CRUD 및 카테고리별 관리
 - **`BokEcosApiService`**: 한국은행 경제통계(ECOS) API 연동
 - **`DartApiService`**: 금융감독원 전자공시(DART) API 연동
@@ -197,9 +257,13 @@ Quantum Studio는 멀티 백엔드 아키텍처를 채택하고 있으며, 각 �
 ## 🏛 공통 사항
 - **보안**: Java API는 `JwtAuthenticationFilter`(`quantum-core`)로 검증. Admin API는 `type="admin"` JWT 필요.
 - **문서화**: Python·Admin AI는 `/docs` 경로에서 Swagger UI 제공.
+- **보안**:
+  - Open Redirect 방지: `?redirect=` 파라미터 검증 (authRedirect)
+  - References URL 검증: http/https만 허용 (safeUrl, url_sanitizer)
 - **DB 마이그레이션**:
-  - Java: `quantum-api-service/.../db/migration/` (Flyway, V1~V10)
-  - Python: `alembic/versions/` (Alembic, 001~004)
+  - Java: `quantum-api-service/.../db/migration/` (Flyway, V1~V20)
+  - V12: terms, user_terms_agreement | V15: plan_config | V18: terms.category, required | V19: users.suspended_at | V20: terms.is_active
+  - Python: `alembic/versions/` (Alembic, 001~005)
 
 ---
 

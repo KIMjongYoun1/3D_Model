@@ -19,6 +19,10 @@ export interface AuthUser {
   name: string;
   profileImage?: string;
   subscription?: string;
+  subscriptionPlanName?: string;
+  subscriptionExpiresAt?: string;
+  /** 구독 상태: active(정상), cancelled(해지신청됨), null(무료/없음) */
+  subscriptionStatus?: string | null;
   createdAt?: string;
   provider?: string;
 }

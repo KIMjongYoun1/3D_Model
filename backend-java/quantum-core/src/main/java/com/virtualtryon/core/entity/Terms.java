@@ -33,6 +33,15 @@ public class Terms {
     @Column(name = "effective_at", nullable = false)
     private LocalDateTime effectiveAt;
 
+    @Column(length = 20, nullable = false)
+    private String category = "SIGNUP";  // SIGNUP, PAYMENT
+
+    @Column(nullable = false)
+    private Boolean required = true;    // 필수/선택
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;    // 노출 여부 (false=미노출)
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -60,6 +69,15 @@ public class Terms {
 
     public LocalDateTime getEffectiveAt() { return effectiveAt; }
     public void setEffectiveAt(LocalDateTime effectiveAt) { this.effectiveAt = effectiveAt; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public Boolean getRequired() { return required; }
+    public void setRequired(Boolean required) { this.required = required; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

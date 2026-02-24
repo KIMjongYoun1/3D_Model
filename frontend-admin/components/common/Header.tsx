@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { checkAdminAuth, adminLogout } from '@/lib/adminApi';
 
 const Header = () => {
   const pathname = usePathname();
@@ -21,13 +22,11 @@ const Header = () => {
     { name: '가입', href: '/register' },
   ];
 
-  const checkLoginStatus = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
-    const name = typeof window !== 'undefined' ? localStorage.getItem('adminName') : null;
-    
-    if (token) {
+  const checkLoginStatus = useCallback(async () => {
+    const admin = await checkAdminAuth();
+    if (admin) {
       setIsLoggedIn(true);
-      setAdminName(name);
+      setAdminName(admin.name || admin.email);
     } else {
       setIsLoggedIn(false);
       setAdminName(null);
@@ -36,9 +35,7 @@ const Header = () => {
 
   useEffect(() => {
     checkLoginStatus();
-    
     const timer = setTimeout(checkLoginStatus, 100);
-    
     window.addEventListener('storage', checkLoginStatus);
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
@@ -46,13 +43,10 @@ const Header = () => {
     };
   }, [checkLoginStatus, pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminName');
-    localStorage.removeItem('adminEmail');
+  const handleLogout = async () => {
+    await adminLogout();
     setIsLoggedIn(false);
     setAdminName(null);
-    
     window.dispatchEvent(new Event('storage'));
     router.push('/');
   };

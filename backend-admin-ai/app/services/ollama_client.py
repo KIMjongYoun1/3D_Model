@@ -77,7 +77,7 @@ class LLMClient:
     async def _call_gemini(self, prompt: str, system_prompt: str = "") -> str | None:
         """Gemini API 폴백 호출"""
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_api_key}"
 
             full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
 

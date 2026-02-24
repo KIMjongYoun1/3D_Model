@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/authApi';
+import { getSafeRedirect } from '@/lib/authRedirect';
 
 export default function NaverCallbackPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function NaverCallbackPage() {
       authApi.get(`/api/v1/auth/naver/callback?code=${code}&state=${state}`)
         .then(response => {
           const { needsAgreement, agreementToken, name } = response.data;
+          const stored = typeof window !== 'undefined' ? sessionStorage.getItem('auth_redirect') : null;
+          const redirect = getSafeRedirect(stored, '/studio');
 
           if (needsAgreement && agreementToken) {
             sessionStorage.setItem('terms_agree_user_name', name || '');
@@ -33,7 +36,8 @@ export default function NaverCallbackPage() {
             return;
           }
 
-          router.push('/studio');
+          if (typeof window !== 'undefined') sessionStorage.removeItem('auth_redirect');
+          router.push(redirect);
         })
         .catch(error => {
           console.error('Naver login failed:', error);

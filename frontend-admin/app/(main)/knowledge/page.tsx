@@ -5,6 +5,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { adminApi } from '@/lib/adminApi';
 import { useRequireAdminAuth } from '@/hooks/useRequireAdminAuth';
 
 interface Knowledge {
@@ -25,14 +26,6 @@ interface FetchHistoryRow {
   errorMessage: string | null;
   paramsJson: string | null;
   fetchedAt: string;
-}
-
-/** Admin API 호출 시 인증 헤더 (관리자 로그인 시에만) */
-function getAdminAuthHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('adminToken');
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
 }
 
 export default function AdminKnowledgePage() {
@@ -69,9 +62,8 @@ export default function AdminKnowledgePage() {
       params.set("size", String(pageSize));
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
       selectedCategories.forEach((c) => params.append("category", c));
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge?${params}`,
-        { headers: getAdminAuthHeaders() }
+      const response = await adminApi.get(
+        `/api/admin/knowledge?${params}`
       );
       const data = response.data;
       setKnowledgeList(data.content ?? []);
@@ -86,7 +78,7 @@ export default function AdminKnowledgePage() {
 
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/categories`, { headers: getAdminAuthHeaders() });
+      const { data } = await adminApi.get("/api/admin/knowledge/categories");
       setCategoryOptions(Array.isArray(data) ? data : []);
     } catch {
       setCategoryOptions([]);
@@ -95,9 +87,8 @@ export default function AdminKnowledgePage() {
 
   const fetchHistoryList = async () => {
     try {
-      const { data } = await axios.get<FetchHistoryRow[]>(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/fetch-history`,
-        { headers: getAdminAuthHeaders() }
+      const { data } = await adminApi.get<FetchHistoryRow[]>(
+        "/api/admin/knowledge/fetch-history"
       );
       setFetchHistory(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -131,7 +122,7 @@ export default function AdminKnowledgePage() {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.post(`${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge`, formData, { headers: getAdminAuthHeaders() });
+      await adminApi.post("/api/admin/knowledge", formData);
       alert("지식이 성공적으로 추가되었습니다.");
       setFormData({ category: 'FINANCE_TAX', title: '', content: '', sourceUrl: '' });
       refreshAfterCollect();
@@ -145,12 +136,12 @@ export default function AdminKnowledgePage() {
   const handleFetchLaw = async () => {
     const query = lawSearchTerm.trim();
     const url = query
-      ? `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/fetch-law?lawName=${encodeURIComponent(query)}`
-      : `${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/fetch-law`;
+      ? `/api/admin/knowledge/fetch-law?lawName=${encodeURIComponent(query)}`
+      : "/api/admin/knowledge/fetch-law";
     setLastCollectResult(null);
     try {
       setLoading(true);
-      const { data } = await axios.post<Knowledge[]>(url, null, { headers: getAdminAuthHeaders() });
+      const { data } = await adminApi.post<Knowledge[]>(url, null);
       const list = Array.isArray(data) ? data : [];
       setLastCollectResult({ source: "법령", count: list.length, titles: list.map((k) => k.title) });
       setLawSearchTerm("");
@@ -175,30 +166,28 @@ export default function AdminKnowledgePage() {
   };
 
   const handleFetchAll = async () => {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_URL;
-    const headers = getAdminAuthHeaders();
     const results = { dart: false, bok: false, law: false };
     let lawError: string | null = null;
     setLastCollectResult(null);
     try {
       setLoading(true);
       try {
-        await axios.post(`${base}/api/admin/knowledge/fetch-dart`, null, { headers });
+        await adminApi.post("/api/admin/knowledge/fetch-dart", null);
         results.dart = true;
       } catch (e) {
         console.error("DART 수집 실패", e);
       }
       try {
-        await axios.post(`${base}/api/admin/knowledge/fetch-bok`, null, { headers });
+        await adminApi.post("/api/admin/knowledge/fetch-bok", null);
         results.bok = true;
       } catch (e) {
         console.error("BOK 수집 실패", e);
       }
       try {
         const lawUrl = lawSearchTerm.trim()
-          ? `${base}/api/admin/knowledge/fetch-law?lawName=${encodeURIComponent(lawSearchTerm.trim())}`
-          : `${base}/api/admin/knowledge/fetch-law`;
-        const { data } = await axios.post<Knowledge[]>(lawUrl, null, { headers });
+          ? `/api/admin/knowledge/fetch-law?lawName=${encodeURIComponent(lawSearchTerm.trim())}`
+          : "/api/admin/knowledge/fetch-law";
+        const { data } = await adminApi.post<Knowledge[]>(lawUrl, null);
         results.law = true;
         const list = Array.isArray(data) ? data : [];
         setLastCollectResult({ source: "법령", count: list.length, titles: list.map((k) => k.title) });
@@ -226,7 +215,7 @@ export default function AdminKnowledgePage() {
   const handleDelete = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/${id}`, { headers: getAdminAuthHeaders() });
+      await adminApi.delete(`/api/admin/knowledge/${id}`);
       refreshAfterCollect();
     } catch (error) {
       alert("삭제 실패");
@@ -247,7 +236,7 @@ export default function AdminKnowledgePage() {
               setLastCollectResult(null);
               try {
                 setLoading(true);
-                const { data } = await axios.post<Knowledge[]>(`${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/fetch-dart`, null, { headers: getAdminAuthHeaders() });
+                const { data } = await adminApi.post<Knowledge[]>("/api/admin/knowledge/fetch-dart", null);
                 const list = Array.isArray(data) ? data : [];
                 setLastCollectResult({ source: "DART", count: list.length, titles: list.map((k) => k.title) });
                 refreshAfterCollect();
@@ -262,7 +251,7 @@ export default function AdminKnowledgePage() {
               setLastCollectResult(null);
               try {
                 setLoading(true);
-                const { data } = await axios.post<Knowledge[]>(`${process.env.NEXT_PUBLIC_ADMIN_API_URL}/api/admin/knowledge/fetch-bok`, null, { headers: getAdminAuthHeaders() });
+                const { data } = await adminApi.post<Knowledge[]>("/api/admin/knowledge/fetch-bok", null);
                 const list = Array.isArray(data) ? data : [];
                 setLastCollectResult({ source: "한국은행(ECOS)", count: list.length, titles: list.map((k) => k.title) });
                 refreshAfterCollect();

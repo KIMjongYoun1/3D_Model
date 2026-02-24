@@ -3,9 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
+import { authApi } from '@/lib/authApi';
 
-const API_URL = process.env.NEXT_PUBLIC_SERVICE_API_URL || 'http://localhost:8080';
+interface TermVersion {
+  id: string;
+  version: string;
+  title: string;
+  effectiveAt?: string;
+}
 
 export default function TermsDetailPage() {
   const params = useParams();
@@ -13,14 +18,16 @@ export default function TermsDetailPage() {
   const id = params.id as string;
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
+  const [allVersions, setAllVersions] = useState<TermVersion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    axios.get(`${API_URL}/api/v1/terms/${id}`)
+    authApi.get(`/api/v1/terms/${id}`)
       .then(res => {
         setTitle(res.data.title || '');
         setContent(res.data.content || '');
+        setAllVersions(res.data.allVersions || []);
       })
       .catch(() => router.push('/studio'))
       .finally(() => setLoading(false));
@@ -37,9 +44,26 @@ export default function TermsDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg font-bold text-slate-900">{title}</h1>
-          <button type="button" onClick={() => window.close()} className="text-blue-600 font-bold hover:underline">
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">{title}</h1>
+            {allVersions.length > 1 && (
+              <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
+                {allVersions.map((v) => (
+                  <Link
+                    key={v.id}
+                    href={`/terms/${v.id}`}
+                    className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      v.id === id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    v{v.version}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+          <button type="button" onClick={() => window.close()} className="text-blue-600 font-bold hover:underline self-start sm:self-auto">
             닫기
           </button>
         </div>

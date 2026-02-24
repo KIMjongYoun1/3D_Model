@@ -3,16 +3,15 @@
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
-const API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:8081";
+import { getSafeRedirect } from "@/lib/authRedirect";
+import { adminApi } from "@/lib/adminApi";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/knowledge";
+  const redirectTo = getSafeRedirect(searchParams.get("redirect"), "/knowledge");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,21 +23,12 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const { data } = await axios.post<{
-        accessToken: string;
+      await adminApi.post<{
+        adminId: string;
         email: string;
         name: string;
         role: string;
-        adminId: string;
-      }>(`${API_URL}/api/admin/auth/login`, { email, password });
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("adminToken", data.accessToken);
-        localStorage.setItem("adminEmail", data.email);
-        localStorage.setItem("adminName", data.name || data.email);
-        localStorage.setItem("adminRole", data.role);
-        localStorage.setItem("adminId", data.adminId);
-      }
+      }>("/api/admin/auth/login", { email, password });
       window.dispatchEvent(new Event("storage"));
       router.push(redirectTo);
       router.refresh();
@@ -57,6 +47,9 @@ function LoginForm() {
           ADMIN <span className="text-indigo-600">LOGIN</span>
         </h1>
         <p className="text-slate-500 text-sm mt-1 font-bold uppercase tracking-widest">관리자 전용</p>
+        <p className="text-slate-400 text-[11px] mt-2">
+          로그인 후 왼쪽 사이드바에서 회원·거래·구독·대시보드·플랜·약관 등을 관리할 수 있습니다.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <Input

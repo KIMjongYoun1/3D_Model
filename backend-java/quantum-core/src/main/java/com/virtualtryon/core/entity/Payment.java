@@ -25,7 +25,10 @@ public class Payment {
     
     @Column(name = "subscription_id")
     private UUID subscriptionId;
-    
+
+    @Column(name = "plan_id", length = 20)
+    private String planId;
+
     @Column(name = "payment_method", nullable = false, length = 50)
     private String paymentMethod;
     
@@ -77,6 +80,9 @@ public class Payment {
 
     public UUID getSubscriptionId() { return subscriptionId; }
     public void setSubscriptionId(UUID subscriptionId) { this.subscriptionId = subscriptionId; }
+
+    public String getPlanId() { return planId; }
+    public void setPlanId(String planId) { this.planId = planId; }
 
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
