@@ -6,8 +6,8 @@ node_modules/
 # Testing
 /coverage
 
-# Next.js
-/.next/
+# Next.js (루트 및 하위 폴더 모두)
+.next/
 /out/
 
 # Production
