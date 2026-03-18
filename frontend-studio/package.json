@@ -9,7 +9,13 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "screenshot-flow": "node scripts/screenshot-flow.mjs",
+    "screenshot-flow:login": "node scripts/screenshot-flow-login.mjs",
+    "screenshot-flow:admin-login": "node scripts/screenshot-flow-admin-login.mjs",
+    "screenshot-all": "node scripts/screenshot-all.mjs",
+    "screenshot-all:login": "node scripts/screenshot-all.mjs --login",
+    "export-flow": "node scripts/export-flow-to-image.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.105.0",
@@ -35,6 +41,7 @@
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.5.0",
+    "playwright": "^1.49.0",
     "vitest": "^2.1.9"
   }
 }

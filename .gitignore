@@ -112,9 +112,14 @@ PROJECT_REALITY_CHECK.md
 PROJECT_ASSESSMENT.md
 COST.md
 
+# Personal / portfolio (프로젝트와 무관)
+docs/portfolio/profile-readme-draft.md
+
 # API Keys and tokens
 config/secrets.yaml
 config/secrets.yml
+.auth-state*.json
+.screenshot.env
 
 # Temporary files & Storage (Important!)
 *.tmp

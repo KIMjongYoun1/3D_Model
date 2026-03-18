@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quantum Studio UI 플로우</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; padding: 24px; background: #0f172a; color: #e2e8f0; }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .sub { color: #94a3b8; font-size: 0.875rem; margin-bottom: 24px; }
+    .section { margin-bottom: 48px; }
+    .section h2 { font-size: 1.125rem; color: #38bdf8; margin-bottom: 16px; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+    .flow { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+    .node { position: relative; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; max-width: 320px; }
+    .node img { display: block; width: 100%; height: auto; max-height: 400px; object-fit: contain; }
+    .node .label { padding: 8px 12px; font-size: 0.8125rem; font-weight: 600; background: #0f172a; }
+    .node .path { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .arrow { color: #64748b; font-size: 1.5rem; align-self: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .grid .node { max-width: none; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tabs button { padding: 8px 16px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; border-radius: 8px; cursor: pointer; }
+    .tabs button.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+    .tabs button:hover:not(.active) { background: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Quantum Studio UI 플로우</h1>
+  <p class="sub">스크린샷 기반 사용자 플로우 (screenshot-all 실행 후 생성)</p>
+  
+
+  <div class="tabs">
+    <button class="active" data-tab="studio">Studio (사용자)</button>
+    <button data-tab="admin">Admin (관리자)</button>
+  </div>
+
+  <div id="studio" class="section tab-content">
+    <h2>Studio — 사용자 플로우 (localhost:3000)</h2>
+    <div class="flow">
+      <div class="node"><img src="screenshots/studio/login.png" alt="login" onerror="this.parentElement.innerHTML='<div class=label>로그인</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">로그인<div class="path">/login</div></div></div>
+      <span class="arrow">→</span>
+      <div class="node"><img src="screenshots/studio/studio.png" alt="studio" onerror="this.parentElement.innerHTML='<div class=label>스튜디오</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">스튜디오<div class="path">/studio</div></div></div>
+      <span class="arrow">→</span>
+      <div class="node"><img src="screenshots/studio/mypage.png" alt="mypage" onerror="this.parentElement.innerHTML='<div class=label>마이페이지</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">마이페이지<div class="path">/mypage</div></div></div>
+      <span class="arrow">→</span>
+      <div class="node"><img src="screenshots/studio/payment.png" alt="payment" onerror="this.parentElement.innerHTML='<div class=label>결제</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">결제<div class="path">/payment</div></div></div>
+    </div>
+    <h3 style="margin-top:24px;font-size:0.9rem;color:#94a3b8">기타</h3><div class="grid"><div class="node"><img src="screenshots/studio/studio-guest.png" alt="studio-guest" onerror="this.parentElement.innerHTML='<div class=label>스튜디오 (온보딩)</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">스튜디오 (온보딩)<div class="path">/studio</div></div></div>
+      <div class="node"><img src="screenshots/studio/terms-1.png" alt="terms-1" onerror="this.parentElement.innerHTML='<div class=label>약관 보기</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">약관 보기<div class="path">/terms/1</div></div></div></div>
+  </div>
+
+  <div id="admin" class="section tab-content" style="display:none">
+    <h2>Admin — 관리자 플로우 (localhost:3001)</h2>
+    <div class="flow">
+      <div class="node"><img src="screenshots/admin/login.png" alt="login" onerror="this.parentElement.innerHTML='<div class=label>관리자 로그인</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">관리자 로그인<div class="path">/login</div></div></div>
+      <span class="arrow">→</span>
+      <div class="node"><img src="screenshots/admin/home.png" alt="home" onerror="this.parentElement.innerHTML='<div class=label>대시보드</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">대시보드<div class="path">/</div></div></div>
+      <span class="arrow">→</span>
+      <div class="node"><img src="screenshots/admin/dashboard.png" alt="dashboard" onerror="this.parentElement.innerHTML='<div class=label>대시보드</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">대시보드<div class="path">/dashboard</div></div></div>
+    </div>
+    <h3 style="margin-top:24px;font-size:0.9rem;color:#94a3b8">운영 메뉴</h3><div class="grid"><div class="node"><img src="screenshots/admin/ai.png" alt="ai" onerror="this.parentElement.innerHTML='<div class=label>AI 어시스턴트</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">AI 어시스턴트<div class="path">/ai</div></div></div>
+      <div class="node"><img src="screenshots/admin/knowledge.png" alt="knowledge" onerror="this.parentElement.innerHTML='<div class=label>지식 베이스</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">지식 베이스<div class="path">/knowledge</div></div></div>
+      <div class="node"><img src="screenshots/admin/members.png" alt="members" onerror="this.parentElement.innerHTML='<div class=label>회원관리</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">회원관리<div class="path">/members</div></div></div>
+      <div class="node"><img src="screenshots/admin/plans-new.png" alt="plans-new" onerror="this.parentElement.innerHTML='<div class=label>플랜 등록</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">플랜 등록<div class="path">/plans/new</div></div></div>
+      <div class="node"><img src="screenshots/admin/plans.png" alt="plans" onerror="this.parentElement.innerHTML='<div class=label>플랜관리</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">플랜관리<div class="path">/plans</div></div></div>
+      <div class="node"><img src="screenshots/admin/subscriptions.png" alt="subscriptions" onerror="this.parentElement.innerHTML='<div class=label>구독관리</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">구독관리<div class="path">/subscriptions</div></div></div>
+      <div class="node"><img src="screenshots/admin/terms-new.png" alt="terms-new" onerror="this.parentElement.innerHTML='<div class=label>약관 등록</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">약관 등록<div class="path">/terms/new</div></div></div>
+      <div class="node"><img src="screenshots/admin/terms.png" alt="terms" onerror="this.parentElement.innerHTML='<div class=label>약관관리</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">약관관리<div class="path">/terms</div></div></div>
+      <div class="node"><img src="screenshots/admin/transactions.png" alt="transactions" onerror="this.parentElement.innerHTML='<div class=label>거래관리</div><p style=padding:40px;color:#64748b>이미지 없음</p>'"><div class="label">거래관리<div class="path">/transactions</div></div></div></div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).style.display = 'block';
+      });
+    });
+  </script>
+</body>
+</html>
